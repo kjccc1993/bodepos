@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["bodepos"]
+}
+
+model Store {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String    @db.Text
+  customRate       Decimal   @default(884.75) @map("custom_rate") @db.Decimal(18, 6)
+  useFixedRate     Boolean   @default(false) @map("use_fixed_rate")
+  bcvRate          Decimal?  @map("bcv_rate") @db.Decimal(18, 6)
+  bcvRateFetchedAt DateTime? @map("bcv_rate_fetched_at") @db.Timestamptz(6)
+  manualRateSetAt  DateTime? @map("manual_rate_set_at") @db.Timestamptz(6)
+  invoiceSeq       BigInt    @default(0) @map("invoice_seq")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  users            User[]
+  products         Product[]
+  customers        Customer[]
+  invoices         Invoice[]
+  dailyIncomes     DailyIncome[]
+  inventoryMoves   InventoryMovement[]
+  syncOperations   SyncOperation[]
+  bcvRateSnapshots BcvRateSnapshot[]
+
+  @@map("stores")
+  @@schema("bodepos")
+}
+
+model BcvRateSnapshot {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  rate      Decimal  @db.Decimal(18, 6)
+  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(6)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+
+  @@index([storeId, fetchedAt(sort: Desc)])
+  @@map("bcv_rate_snapshots")
+  @@schema("bodepos")
+}
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId      String   @map("store_id") @db.Uuid
+  email        String   @db.Text
+  passwordHash String   @map("password_hash") @db.Text
+  role         String   @default("admin") @db.Text
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+
+  @@unique([storeId, email])
+  @@map("users")
+  @@schema("bodepos")
+}
+
+enum ProductUnit {
+  UNIT
+  GRAM
+  KG
+
+  @@schema("bodepos")
+}
+
+model Product {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId            String      @map("store_id") @db.Uuid
+  name               String      @db.Text
+  priceUsd           Decimal     @map("price_usd") @db.Decimal(18, 4)
+  unit               ProductUnit @default(UNIT)
+  stock              Decimal     @default(0) @db.Decimal(18, 4)
+  barcode            String?     @db.Text
+  lowStockThreshold  Decimal?    @map("low_stock_threshold") @db.Decimal(18, 4)
+  isActive           Boolean     @default(true) @map("is_active")
+  colorTag           String?     @map("color_tag") @db.Text
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  store          Store               @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  invoiceLines   InvoiceLine[]
+  inventoryMoves InventoryMovement[]
+
+  @@unique([storeId, barcode])
+  @@index([storeId, name])
+  @@map("products")
+  @@schema("bodepos")
+}
+
+model Customer {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  name      String   @db.Text
+  phone     String?  @db.Text
+  debtUsd   Decimal  @default(0) @map("debt_usd") @db.Decimal(18, 4)
+  colorTag  String?  @map("color_tag") @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store    Store             @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  invoices Invoice[]
+  payments CustomerPayment[]
+
+  @@index([storeId, name])
+  @@map("customers")
+  @@schema("bodepos")
+}
+
+enum InvoiceStatus {
+  PAID
+  PENDING
+
+  @@schema("bodepos")
+}
+
+model Invoice {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId         String        @map("store_id") @db.Uuid
+  number          BigInt        @map("number")
+  status          InvoiceStatus @default(PAID)
+  customerId      String?       @map("customer_id") @db.Uuid
+  rateApplied     Decimal       @map("rate_applied") @db.Decimal(18, 6)
+  totalUsd        Decimal       @map("total_usd") @db.Decimal(18, 4)
+  totalBs         Decimal       @map("total_bs") @db.Decimal(18, 2)
+  paidUsdCash     Decimal       @default(0) @map("paid_usd_cash") @db.Decimal(18, 4)
+  paidPosBs       Decimal       @default(0) @map("paid_pos_bs") @db.Decimal(18, 2)
+  paidPos2Bs      Decimal       @default(0) @map("paid_pos2_bs") @db.Decimal(18, 2)
+  paidMobileBs    Decimal       @default(0) @map("paid_mobile_bs") @db.Decimal(18, 2)
+  paidCashBs      Decimal       @default(0) @map("paid_cash_bs") @db.Decimal(18, 2)
+  paidBiopagoBs   Decimal       @default(0) @map("paid_biopago_bs") @db.Decimal(18, 2)
+  changeUsd       Decimal       @default(0) @map("change_usd") @db.Decimal(18, 4)
+  changeBs        Decimal       @default(0) @map("change_bs") @db.Decimal(18, 2)
+  changeMobileBs  Decimal       @default(0) @map("change_mobile_bs") @db.Decimal(18, 2)
+  creditUsd       Decimal       @default(0) @map("credit_usd") @db.Decimal(18, 4)
+  clientOpId      String?       @map("client_op_id") @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store    Store         @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lines    InvoiceLine[]
+
+  @@unique([storeId, number])
+  @@unique([storeId, clientOpId])
+  @@index([storeId, createdAt])
+  @@map("invoices")
+  @@schema("bodepos")
+}
+
+model InvoiceLine {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId    String   @map("invoice_id") @db.Uuid
+  productId    String?  @map("product_id") @db.Uuid
+  productName  String   @map("product_name") @db.Text
+  quantity     Decimal  @db.Decimal(18, 4)
+  unit         ProductUnit
+  unitPriceUsd Decimal  @map("unit_price_usd") @db.Decimal(18, 4)
+  lineTotalUsd Decimal  @map("line_total_usd") @db.Decimal(18, 4)
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("invoice_lines")
+  @@schema("bodepos")
+}
+
+model CustomerPayment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId    String   @map("store_id") @db.Uuid
+  customerId String   @map("customer_id") @db.Uuid
+  amountUsd  Decimal  @map("amount_usd") @db.Decimal(18, 4)
+  method     String   @db.Text
+  note       String?  @db.Text
+  clientOpId String?  @map("client_op_id") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@unique([storeId, clientOpId])
+  @@map("customer_payments")
+  @@schema("bodepos")
+}
+
+model DailyIncome {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId    String   @map("store_id") @db.Uuid
+  date       DateTime @db.Date
+  usdCash    Decimal  @default(0) @map("usd_cash") @db.Decimal(18, 4)
+  cashBs     Decimal  @default(0) @map("cash_bs") @db.Decimal(18, 2)
+  posBs      Decimal  @default(0) @map("pos_bs") @db.Decimal(18, 2)
+  pos2Bs     Decimal  @default(0) @map("pos2_bs") @db.Decimal(18, 2)
+  mobileBs   Decimal  @default(0) @map("mobile_bs") @db.Decimal(18, 2)
+  biopagoBs  Decimal  @default(0) @map("biopago_bs") @db.Decimal(18, 2)
+  totalUsd   Decimal  @default(0) @map("total_usd") @db.Decimal(18, 4)
+  totalBs    Decimal  @default(0) @map("total_bs") @db.Decimal(18, 2)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+
+  @@unique([storeId, date])
+  @@map("daily_incomes")
+  @@schema("bodepos")
+}
+
+enum InventoryMoveType {
+  PURCHASE
+  ADJUSTMENT
+  SALE
+
+  @@schema("bodepos")
+}
+
+model InventoryMovement {
+  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String            @map("store_id") @db.Uuid
+  productId String            @map("product_id") @db.Uuid
+  type      InventoryMoveType
+  qtyDelta  Decimal           @map("qty_delta") @db.Decimal(18, 4)
+  note      String?           @db.Text
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([storeId, createdAt])
+  @@map("inventory_movements")
+  @@schema("bodepos")
+}
+
+model SyncOperation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  clientOpId String @map("client_op_id") @db.Text
+  kind      String   @db.Text
+  payload   Json     @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Restrict)
+
+  @@unique([storeId, clientOpId])
+  @@map("sync_operations")
+  @@schema("bodepos")
+}

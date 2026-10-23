@@ -1,0 +1,26 @@
+{
+  "name": "bodepos",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "yarn@4.13.0",
+  "scripts": {
+    "install:api": "yarn --cwd apps/api install",
+    "install:web": "yarn --cwd apps/web install",
+    "install:all": "yarn install:api && yarn install:web",
+    "free:api": "node scripts/free-port.mjs --env apps/api/.env",
+    "free:web": "node scripts/free-port.mjs --port 5350",
+    "dev:api": "yarn free:api && yarn --cwd apps/api dev",
+    "dev:web": "yarn free:web && yarn --cwd apps/web dev",
+    "dev": "concurrently -n api,web -c green,cyan \"yarn dev:api\" \"yarn dev:web\"",
+    "prisma:generate": "yarn --cwd apps/api prisma:generate",
+    "prisma:deploy": "yarn --cwd apps/api prisma:deploy",
+    "prisma:seed": "yarn --cwd apps/api prisma:seed",
+    "db:push": "yarn --cwd apps/api db:push",
+    "lint:api": "yarn --cwd apps/api lint",
+    "lint:web": "yarn --cwd apps/web lint",
+    "build": "yarn --cwd apps/api build && yarn --cwd apps/web build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
