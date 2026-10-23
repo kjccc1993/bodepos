@@ -13,6 +13,7 @@
     "dev:web": "yarn free:web && yarn --cwd apps/web dev",
     "dev": "concurrently -n api,web -c green,cyan \"yarn dev:api\" \"yarn dev:web\"",
     "prisma:generate": "yarn --cwd apps/api prisma:generate",
+    "prisma:migrate": "yarn --cwd apps/api prisma:migrate",
     "prisma:deploy": "yarn --cwd apps/api prisma:deploy",
     "prisma:seed": "yarn --cwd apps/api prisma:seed",
     "db:push": "yarn --cwd apps/api db:push",

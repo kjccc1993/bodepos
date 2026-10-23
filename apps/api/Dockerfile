@@ -42,6 +42,7 @@ COPY --from=build /app/prisma ./prisma
 COPY entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x entrypoint.sh \
+  && sed -i 's/\r$//' entrypoint.sh \
   && chown -R node:node /app
 
 USER node

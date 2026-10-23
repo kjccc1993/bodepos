@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] Sincronizando schema Prisma (db push)..."
-npx prisma db push
+echo "[entrypoint] Aplicando migraciones Prisma..."
+npx prisma migrate deploy
 
 if [ "${RUN_SEED:-}" = "true" ]; then
   echo "[entrypoint] Ejecutando seed..."
