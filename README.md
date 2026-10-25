@@ -40,7 +40,7 @@ yarn install:all   # apps/api y apps/web
 yarn dev
 ```
 
-**Credenciales seed:** `admin@bode.local` / `admin123`
+**Credenciales seed:** `admin` / `admin123`
 
 ## Estado
 

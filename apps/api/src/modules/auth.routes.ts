@@ -5,11 +5,12 @@ import { asyncHandler } from '../shared/async-handler.js';
 import { AppError } from '../shared/errors.js';
 import { prisma } from '../shared/prisma.js';
 import { authRequired, signSession, verifySession } from '../shared/session.js';
+import { normalizeUsername, usernameSchema } from '../shared/username.js';
 
 export const authRouter = Router();
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  username: usernameSchema,
   password: z.string().min(1),
 });
 
@@ -20,8 +21,9 @@ authRouter.post(
     if (!parsed.success) {
       throw new AppError(422, 'VALIDATION_ERROR', 'Credenciales inválidas');
     }
+    const username = normalizeUsername(parsed.data.username);
     const user = await prisma.user.findFirst({
-      where: { email: parsed.data.email.toLowerCase(), isActive: true },
+      where: { username, isActive: true },
       include: { store: true },
     });
     if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) {
@@ -30,7 +32,7 @@ authRouter.post(
     const token = signSession({
       user_id: user.id,
       store_id: user.storeId,
-      email: user.email,
+      username: user.username,
       role: user.role,
     });
     res.json({ token });
@@ -55,6 +57,6 @@ authRouter.get(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.session!.user_id } });
     if (!user) throw new AppError(401, 'UNAUTHORIZED', 'Usuario no encontrado');
-    res.json({ email: user.email, role: user.role, storeId: user.storeId });
+    res.json({ username: user.username, role: user.role, storeId: user.storeId });
   }),
 );

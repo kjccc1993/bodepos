@@ -14,21 +14,21 @@ async function main() {
       },
     }));
 
-  const email = 'admin@bode.local';
+  const username = 'admin';
   const passwordHash = await bcrypt.hash('admin123', 10);
 
   await prisma.user.upsert({
-    where: { storeId_email: { storeId: store.id, email } },
+    where: { storeId_username: { storeId: store.id, username } },
     create: {
       storeId: store.id,
-      email,
+      username,
       passwordHash,
       role: 'admin',
     },
     update: { passwordHash, isActive: true },
   });
 
-  console.log('Seed OK — admin@bode.local / admin123');
+  console.log('Seed OK — admin / admin123');
   console.log('Catálogo: yarn prisma:import-catalog');
 }
 

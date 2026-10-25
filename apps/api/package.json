@@ -13,6 +13,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:create-users": "tsx prisma/create-users.ts",
     "prisma:import-catalog": "tsx prisma/import-catalog.ts",
     "predev": "prisma generate",
     "dev": "nodemon",

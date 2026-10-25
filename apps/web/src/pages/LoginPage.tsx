@@ -9,7 +9,7 @@ export function LoginPage() {
   const { login } = useAuth();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState('admin@bode.local');
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ export function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await login(email, password);
+      await login(username, password);
       const next = searchParams.get('next');
       nav(next && next.startsWith('/') ? next : '/sell');
     } catch (err) {
@@ -54,7 +54,12 @@ export function LoginPage() {
           Punto de venta para bodegas
         </GenericText>
         <Stack gap={3}>
-          <GenericInput placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} type="email" />
+          <GenericInput
+            placeholder="Usuario"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            autoComplete="username"
+          />
           <GenericInput
             placeholder="Contraseña"
             value={password}

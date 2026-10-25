@@ -5,7 +5,7 @@ import { AppError } from './errors.js';
 export type SessionPayload = {
   user_id: string;
   store_id: string;
-  email: string;
+  username: string;
   role: string;
 };
 
