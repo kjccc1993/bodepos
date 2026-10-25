@@ -2,7 +2,7 @@ import { Box, Button, Stack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandLogo } from '@/components/BrandLogo';
-import { GenericInput, GenericText } from '@/components/ui';
+import { GenericInput, GenericPasswordInput, GenericText } from '@/components/ui';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export function LoginPage() {
@@ -60,11 +60,10 @@ export function LoginPage() {
             onChange={e => setUsername(e.target.value)}
             autoComplete="username"
           />
-          <GenericInput
+          <GenericPasswordInput
             placeholder="Contraseña"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            type="password"
           />
           {error && <GenericText variant="error">{error}</GenericText>}
           <Button type="submit" colorPalette="green" borderRadius="xl" w="full" size="lg" loading={loading}>
