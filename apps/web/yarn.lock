@@ -1510,15 +1510,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@internationalized/date@npm:3.12.4":
-  version: 3.12.4
-  resolution: "@internationalized/date@npm:3.12.4"
-  dependencies:
-    "@swc/helpers": "npm:^0.5.0"
-  checksum: 10c0/150ea8543cf8ac215a076138aaf86e845c26469ea49734e11cdae19d21a8e03f3824a622f9422211540c281feda5ccf6edfd30d98e89cd15c1c305aa1101e9c8
-  languageName: node
-  linkType: hard
-
 "@internationalized/number@npm:3.6.7":
   version: 3.6.7
   resolution: "@internationalized/number@npm:3.6.7"
