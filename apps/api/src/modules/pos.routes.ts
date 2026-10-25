@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { ProductUnit } from '@prisma/client';
+import { Prisma, ProductUnit } from '@prisma/client';
 import { asyncHandler } from '../shared/async-handler.js';
 import { AppError } from '../shared/errors.js';
 import { prisma } from '../shared/prisma.js';
@@ -77,11 +77,13 @@ posRouter.get(
     const { storeId } = requireStore(req);
     const rate = await getStoreRate(storeId);
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    const where = {
+    const where: Prisma.ProductWhereInput = {
       storeId,
       isActive: true,
-      ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
     };
+    if (q) {
+      where.name = { contains: q, mode: Prisma.QueryMode.insensitive };
+    }
     const rawLimit = Number(req.query.limit);
     const rawOffset = Number(req.query.offset);
     const usePagination = Number.isFinite(rawLimit) || Number.isFinite(rawOffset);
