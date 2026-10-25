@@ -34,3 +34,12 @@ BEGIN
     ALTER TYPE "bodepos"."ProductUnit_new" RENAME TO "ProductUnit";
   END IF;
 END $$;
+
+-- Desbloquear P3009: migración fallida registrada pero esquema ya corregido arriba.
+UPDATE "bodepos"."_prisma_migrations"
+SET
+  "finished_at" = COALESCE("finished_at", NOW()),
+  "logs" = COALESCE("logs", ''),
+  "rolled_back_at" = NULL
+WHERE "migration_name" = '20261024130000_remove_kg_product_unit'
+  AND "finished_at" IS NULL;
