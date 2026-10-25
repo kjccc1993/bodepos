@@ -10,6 +10,9 @@ WHERE "unit" = 'KG';
 CREATE TYPE "bodepos"."ProductUnit_new" AS ENUM ('UNIT', 'GRAM');
 
 ALTER TABLE "bodepos"."products"
+  ALTER COLUMN "unit" DROP DEFAULT;
+
+ALTER TABLE "bodepos"."products"
   ALTER COLUMN "unit" TYPE "bodepos"."ProductUnit_new"
   USING ("unit"::text::"bodepos"."ProductUnit_new");
 
@@ -20,3 +23,6 @@ ALTER TABLE "bodepos"."invoice_lines"
 DROP TYPE "bodepos"."ProductUnit";
 
 ALTER TYPE "bodepos"."ProductUnit_new" RENAME TO "ProductUnit";
+
+ALTER TABLE "bodepos"."products"
+  ALTER COLUMN "unit" SET DEFAULT 'UNIT'::"bodepos"."ProductUnit";

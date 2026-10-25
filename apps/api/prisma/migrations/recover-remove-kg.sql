@@ -1,6 +1,9 @@
 -- Recuperación idempotente si 20261024130000_remove_kg_product_unit quedó a medias.
 DROP TYPE IF EXISTS "bodepos"."ProductUnit_new";
 
+ALTER TABLE "bodepos"."products"
+  ALTER COLUMN "unit" DROP DEFAULT;
+
 DO $$
 BEGIN
   IF EXISTS (
@@ -34,6 +37,9 @@ BEGIN
     ALTER TYPE "bodepos"."ProductUnit_new" RENAME TO "ProductUnit";
   END IF;
 END $$;
+
+ALTER TABLE "bodepos"."products"
+  ALTER COLUMN "unit" SET DEFAULT 'UNIT'::"bodepos"."ProductUnit";
 
 -- Desbloquear P3009: migración fallida registrada pero esquema ya corregido arriba.
 UPDATE "bodepos"."_prisma_migrations"
