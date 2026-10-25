@@ -13,5 +13,10 @@ if [ "${RUN_SEED:-}" = "true" ]; then
   npx tsx prisma/seed.ts
 fi
 
+if [ "${RUN_IMPORT_CATALOG:-}" = "true" ]; then
+  echo "[entrypoint] Importando catálogo de productos..."
+  npx tsx prisma/import-catalog.ts
+fi
+
 echo "[entrypoint] Iniciando BodePOS API..."
 exec node dist/index.js

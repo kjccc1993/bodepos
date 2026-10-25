@@ -28,18 +28,8 @@ async function main() {
     update: { passwordHash, isActive: true },
   });
 
-  const productCount = await prisma.product.count({ where: { storeId: store.id } });
-  if (productCount === 0) {
-    await prisma.product.createMany({
-      data: [
-        { storeId: store.id, name: 'Harina pan 1kg', priceUsd: 1.4, stock: 21, unit: 'UNIT', barcode: '7591234567890' },
-        { storeId: store.id, name: 'Aceite 900ml', priceUsd: 4.4, stock: 15, unit: 'UNIT', barcode: '7591234567891' },
-        { storeId: store.id, name: 'Arroz 1kg', priceUsd: 1.9, stock: 8, unit: 'UNIT', barcode: '7591234567892' },
-      ],
-    });
-  }
-
   console.log('Seed OK — admin@bode.local / admin123');
+  console.log('Catálogo: yarn prisma:import-catalog');
 }
 
 main()
