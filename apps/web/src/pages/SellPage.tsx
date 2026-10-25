@@ -56,7 +56,7 @@ export function SellPage() {
         return;
       }
       const current = qtyByProductId.get(p.id) ?? 0;
-      const step = p.unit === 'UNIT' ? 1 : p.unit === 'GRAM' ? 100 : 0.1;
+      const step = p.unit === 'UNIT' ? 1 : 100;
       syncQuantity(p, String(current + step));
     },
     [products, qtyByProductId, syncQuantity],
@@ -70,7 +70,7 @@ export function SellPage() {
       templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}
       gap={{ base: 2, md: 3 }}
       w="full"
-      alignItems={{ base: 'start', md: 'stretch' }}
+      alignItems="start"
     >
       {products.map(p => (
         <ProductRow
@@ -81,7 +81,7 @@ export function SellPage() {
           onQuantityChange={raw => syncQuantity(p, raw)}
           onStep={delta => {
             const current = qtyByProductId.get(p.id) ?? 0;
-            const step = p.unit === 'UNIT' ? delta : p.unit === 'GRAM' ? delta * 100 : delta * 0.1;
+            const step = p.unit === 'UNIT' ? delta : delta * 100;
             const next = Math.max(0, current + step);
             syncQuantity(p, next > 0 ? String(next) : '');
           }}
@@ -124,8 +124,6 @@ export function SellPage() {
               onChange={e => setSearch(e.target.value)}
               size="lg"
               h="12"
-              borderWidth="2px"
-              borderColor="gray.400"
               boxShadow="sm"
             />
           </Box>

@@ -1,7 +1,8 @@
 import { Box, Button, Stack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GenericHeading, GenericInput, GenericText } from '@/components/ui';
+import { BrandLogo } from '@/components/BrandLogo';
+import { GenericInput, GenericText } from '@/components/ui';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export function LoginPage() {
@@ -37,9 +38,7 @@ export function LoginPage() {
   return (
     <FlexCenter>
       <Box as="form" onSubmit={onSubmit} w="full" maxW="md" p={6} bg="white" borderRadius="lg" shadow="md">
-        <GenericHeading variant="hero" mb={2}>
-          BodePOS
-        </GenericHeading>
+        <BrandLogo size="lg" mx="auto" display="block" mb={3} />
         <GenericText variant="muted" mb={4}>
           Punto de venta para bodegas
         </GenericText>

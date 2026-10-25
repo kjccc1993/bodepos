@@ -7,6 +7,9 @@ import { AuthProvider } from '@/lib/auth/AuthContext';
 import { CartProvider } from '@/lib/cart/CartContext';
 import { router } from '@/router';
 import '@/index.css';
+import { registerSW } from 'virtual:pwa-register';
+
+registerSW({ immediate: true });
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },

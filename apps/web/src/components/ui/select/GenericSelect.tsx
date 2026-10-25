@@ -1,7 +1,11 @@
 import { Portal, Select, createListCollection } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { disabledFieldRootStyles, disabledFieldStyles, DISABLED_FIELD } from '@/components/ui/field-disabled-styles';
-import { FORM_CONTROL_BORDER_RADIUS, FORM_CONTROL_HEIGHT } from '@/components/ui/form-control-metrics';
+import {
+  FORM_CONTROL_BORDER_RADIUS,
+  formControlFieldHeight,
+  type FormControlSize,
+} from '@/components/ui/form-control-metrics';
 
 export type SelectOption = { value: string; label: string };
 
@@ -13,6 +17,7 @@ type GenericSelectProps = {
   name?: string;
   invalid?: boolean;
   disabled?: boolean;
+  size?: FormControlSize;
   'aria-label'?: string;
 };
 
@@ -24,11 +29,14 @@ export function GenericSelect({
   name,
   invalid,
   disabled = false,
+  size = 'md',
   'aria-label': ariaLabel,
 }: GenericSelectProps) {
   const collection = useMemo(() => createListCollection({ items: options }), [options]);
   const hasValue = value != null && value.length > 0;
   const borderColor = invalid ? 'red.500' : disabled ? DISABLED_FIELD.borderColor : 'gray.300';
+  const fieldHeight = formControlFieldHeight(size);
+  const selectSize = size === 'xl' ? 'lg' : size;
 
   return (
     <Select.Root
@@ -36,7 +44,7 @@ export function GenericSelect({
       value={hasValue ? [value] : []}
       onValueChange={details => onChange(details.value?.[0] ?? '')}
       name={name}
-      size="md"
+      size={selectSize}
       w="full"
       minW={0}
       borderRadius={FORM_CONTROL_BORDER_RADIUS}
@@ -54,9 +62,9 @@ export function GenericSelect({
           borderRadius={FORM_CONTROL_BORDER_RADIUS}
           w="full"
           minW={0}
-          h={{ base: 'touch', lg: FORM_CONTROL_HEIGHT.md }}
-          minH={{ base: 'touch', lg: FORM_CONTROL_HEIGHT.md }}
-          maxH={{ base: 'touch', lg: FORM_CONTROL_HEIGHT.md }}
+          h={fieldHeight}
+          minH={fieldHeight}
+          maxH={fieldHeight}
           bg="transparent"
           borderWidth="1px"
           borderColor={borderColor}

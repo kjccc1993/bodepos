@@ -1,6 +1,6 @@
 import { Button, Stack } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { GenericInput, GenericText } from '@/components/ui';
+import { useEffect, useId, useState } from 'react';
+import { FormField, GenericInput, GenericText } from '@/components/ui';
 import { useStoreSettings, useUpdateStoreSettings } from '@/lib/api/hooks';
 import { isManualRateActiveToday } from '@/lib/rate-day';
 import { formatRateInput, parseRateInput } from '@/lib/rate';
@@ -15,6 +15,7 @@ export function RateSettingsForm({ open, onClose }: Props) {
   const update = useUpdateStoreSettings();
   const [rateValue, setRateValue] = useState('');
   const [error, setError] = useState('');
+  const rateId = useId();
 
   useEffect(() => {
     if (!open || !settings) return;
@@ -69,9 +70,9 @@ export function RateSettingsForm({ open, onClose }: Props) {
         </GenericText>
       )}
 
-      <Stack gap={2}>
-        <GenericText variant="label">Tasa para operar hoy (Bs por 1 USD)</GenericText>
+      <FormField label="Tasa para operar hoy (Bs por 1 USD)" htmlFor={rateId}>
         <GenericInput
+          id={rateId}
           decimal
           value={rateValue}
           onChange={e => {
@@ -80,7 +81,7 @@ export function RateSettingsForm({ open, onClose }: Props) {
           }}
           inputMode="decimal"
         />
-      </Stack>
+      </FormField>
 
       {error && <GenericText variant="error">{error}</GenericText>}
 

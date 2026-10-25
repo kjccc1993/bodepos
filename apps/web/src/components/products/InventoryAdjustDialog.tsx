@@ -1,8 +1,8 @@
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button, CloseButton, Dialog, Flex, Portal, Stack, chakra } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { GenericInput, GenericText } from '@/components/ui';
+import { useEffect, useId, useState } from 'react';
+import { FormField, GenericInput, GenericText } from '@/components/ui';
 import { parseQuantityInput } from '@/lib/cart/quantity';
 import type { Product, ProductUnit } from '@/lib/types';
 
@@ -85,7 +85,6 @@ function InventoryDirectionToggle({
 function amountPlaceholder(unit: ProductUnit, direction: Direction) {
   const verb = direction === 'in' ? 'ingresar' : 'retirar';
   if (unit === 'UNIT') return `Unidades a ${verb}`;
-  if (unit === 'KG') return `Kg a ${verb}`;
   return `Gramos a ${verb}`;
 }
 
@@ -107,6 +106,7 @@ export function InventoryAdjustDialog({
   const [direction, setDirection] = useState<Direction>('in');
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
+  const amountId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -156,24 +156,29 @@ export function InventoryAdjustDialog({
 
             <Dialog.Body px={4} py={4}>
               <Stack gap={4}>
-                <InventoryDirectionToggle value={direction} onChange={setDirection} />
+                <FormField label="Tipo de movimiento">
+                  <InventoryDirectionToggle value={direction} onChange={setDirection} />
+                </FormField>
 
-                <GenericInput
-                  placeholder={amountPlaceholder(product.unit, direction)}
-                  value={amount}
-                  onChange={e => {
-                    setAmount(e.target.value);
-                    if (error) setError('');
-                  }}
-                  integer={integer}
-                  decimal={decimal}
-                  inputMode={integer ? 'numeric' : 'decimal'}
-                  size="lg"
-                  h="12"
-                  bg="gray.50"
-                  borderWidth="1px"
-                  borderColor="gray.200"
-                />
+                <FormField label="Cantidad" htmlFor={amountId}>
+                  <GenericInput
+                    id={amountId}
+                    placeholder={amountPlaceholder(product.unit, direction)}
+                    value={amount}
+                    onChange={e => {
+                      setAmount(e.target.value);
+                      if (error) setError('');
+                    }}
+                    integer={integer}
+                    decimal={decimal}
+                    inputMode={integer ? 'numeric' : 'decimal'}
+                    size="lg"
+                    h="12"
+                    bg="gray.50"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                  />
+                </FormField>
 
                 {error && <GenericText variant="error">{error}</GenericText>}
 

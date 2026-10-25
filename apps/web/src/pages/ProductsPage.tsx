@@ -1,10 +1,10 @@
 import { faBoxesStacked, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { Box, Button, Flex, Grid, Stack } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { InventoryAdjustDialog } from '@/components/products/InventoryAdjustDialog';
 import { ProductCardActionIcon } from '@/components/sell/ProductCardActionIcon';
 import { ProductCardShell } from '@/components/sell/ProductCardShell';
-import { GenericHeading, GenericInput, GenericSelect, GenericText, type SelectOption } from '@/components/ui';
+import { FormField, GenericHeading, GenericInput, GenericSelect, GenericText, type SelectOption } from '@/components/ui';
 import { useProducts, useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
@@ -12,7 +12,6 @@ import { apiFetch } from '@/lib/http/client';
 
 const UNIT_OPTIONS: SelectOption[] = [
   { value: 'UNIT', label: 'Unidad' },
-  { value: 'KG', label: 'Kg' },
   { value: 'GRAM', label: 'Gramos' },
 ];
 
@@ -27,6 +26,12 @@ export function ProductsPage() {
   const [inventoryBusy, setInventoryBusy] = useState(false);
 
   const unitValue = form?.unit ?? 'UNIT';
+  const fieldIds = {
+    name: useId(),
+    price: useId(),
+    barcode: useId(),
+    unit: useId(),
+  };
 
   return (
     <Flex
@@ -66,8 +71,6 @@ export function ProductsPage() {
           onChange={e => setSearch(e.target.value)}
           size="lg"
           h="12"
-          borderWidth="2px"
-          borderColor="gray.400"
           boxShadow="sm"
         />
       </Box>
@@ -77,7 +80,7 @@ export function ProductsPage() {
           templateColumns={{ base: '1fr', md: 'repeat(3, minmax(0, 1fr))' }}
           gap={{ base: 2, md: 3 }}
           w="full"
-          alignItems={{ base: 'start', md: 'stretch' }}
+          alignItems="start"
         >
           {products.map(p => (
             <ProductCardShell
@@ -155,32 +158,41 @@ export function ProductsPage() {
           zIndex={20}
         >
           <Box bg="white" p={4} borderRadius="md" w="full" maxW="md">
-            <Stack gap={2}>
+            <Stack gap={3}>
               <GenericHeading variant="section">
                 {form.id ? 'Editar' : 'Nuevo'} producto
               </GenericHeading>
-              <GenericInput
-                placeholder="Nombre"
-                value={form.name ?? ''}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-              />
-              <GenericInput
-                placeholder="Precio USD"
-                decimal
-                value={form.priceUsd ?? ''}
-                onChange={e => setForm({ ...form, priceUsd: Number(e.target.value.replace(',', '.')) })}
-              />
-              <GenericInput
-                placeholder="Código de barras"
-                value={form.barcode ?? ''}
-                onChange={e => setForm({ ...form, barcode: e.target.value })}
-              />
-              <GenericSelect
-                options={UNIT_OPTIONS}
-                value={unitValue}
-                onChange={v => setForm({ ...form, unit: v as ProductUnit })}
-                placeholder="Unidad de venta"
-              />
+              <FormField label="Nombre" htmlFor={fieldIds.name}>
+                <GenericInput
+                  id={fieldIds.name}
+                  value={form.name ?? ''}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                />
+              </FormField>
+              <FormField label="Precio USD" htmlFor={fieldIds.price}>
+                <GenericInput
+                  id={fieldIds.price}
+                  decimal
+                  value={form.priceUsd ?? ''}
+                  onChange={e => setForm({ ...form, priceUsd: Number(e.target.value.replace(',', '.')) })}
+                />
+              </FormField>
+              <FormField label="Código de barras" htmlFor={fieldIds.barcode}>
+                <GenericInput
+                  id={fieldIds.barcode}
+                  value={form.barcode ?? ''}
+                  onChange={e => setForm({ ...form, barcode: e.target.value })}
+                />
+              </FormField>
+              <FormField label="Unidad de venta" htmlFor={fieldIds.unit}>
+                <GenericSelect
+                  options={UNIT_OPTIONS}
+                  value={unitValue}
+                  onChange={v => setForm({ ...form, unit: v as ProductUnit })}
+                  name={fieldIds.unit}
+                  aria-label="Unidad de venta"
+                />
+              </FormField>
               <Flex gap={2}>
                 <Button flex={1} variant="outline" onClick={() => setForm(null)}>
                   Cancelar

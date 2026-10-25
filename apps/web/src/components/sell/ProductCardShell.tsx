@@ -5,7 +5,7 @@ import { formatBs, formatUsd } from '@/lib/money';
 import type { Product } from '@/lib/types';
 
 export function productStockSuffix(unit: Product['unit']) {
-  return unit === 'UNIT' ? 'uds' : unit === 'KG' ? 'kg' : 'g';
+  return unit === 'UNIT' ? 'uds' : 'g';
 }
 
 /** Ancho de la columna de acciones (stepper o botones), alineado con CompactQuantityField. */
@@ -41,35 +41,28 @@ export function ProductCardShell({
 
   return (
     <Stack
-      gap={{ base: 1.5, md: 2 }}
-      p={{ base: 2, md: 2.5 }}
+      gap={1}
+      p={{ base: 1.5, md: 2 }}
       bg={highlight ? 'green.50' : 'white'}
       borderRadius="lg"
       borderWidth="1px"
       borderColor={highlight ? 'green.200' : 'gray.200'}
       w="full"
-      h={h ?? { base: 'auto', md: 'full' }}
+      h={h ?? 'auto'}
       minW={0}
       boxShadow="sm"
     >
-      <Flex
-        align="start"
-        justify="space-between"
-        gap={1.5}
-        minH={{ base: '2.5rem', md: '2.75rem' }}
-        maxH={{ base: '2.5rem', md: '2.75rem' }}
-        flexShrink={0}
-        overflow="hidden"
-      >
+      <Flex align="start" justify="space-between" gap={1.5} flexShrink={0} overflow="hidden" minH="2.6em">
         <GenericText
           variant="strong"
           fontSize="sm"
-          lineHeight="1.375"
+          lineHeight="1.3"
           lineClamp={2}
           overflow="hidden"
+          textOverflow="ellipsis"
           flex="1"
           minW={0}
-          minH={0}
+          minH="2.6em"
           title={product.name}
         >
           {product.name}
@@ -88,7 +81,7 @@ export function ProductCardShell({
         )}
       </Flex>
 
-      <Flex align="flex-end" justify="space-between" gap={{ base: 1, md: 2 }} mt={{ base: 0, md: 'auto' }}>
+      <Flex align="flex-end" justify="space-between" gap={{ base: 1, md: 2 }}>
         <Box minW={0} flex="1" pe={{ base: 1, md: 2 }}>
           <GenericText variant="price" fontSize="sm">
             {formatUsd(displayUsd)}

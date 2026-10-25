@@ -18,12 +18,12 @@ const RateBadgeButton = chakra('button', {
   base: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '2',
+    gap: '1.5',
     flexShrink: 0,
     maxW: '100%',
-    px: '2.5',
-    py: '1.5',
-    borderRadius: 'full',
+    px: '2',
+    py: '1',
+    borderRadius: 'md',
     bg: 'blue.50',
     borderWidth: '1px',
     borderColor: 'blue.200',
@@ -58,7 +58,7 @@ export function RateBadgeWithSettings() {
         onClick={() => setOpen(true)}
         aria-label={`Tasa: 1 dólar igual a ${rateLabel} bolívares. Toca para configurar`}
       >
-        <Text fontSize="sm" fontWeight="bold" fontVariantNumeric="tabular-nums" whiteSpace="nowrap">
+        <Text fontSize="xs" fontWeight="bold" fontVariantNumeric="tabular-nums" whiteSpace="nowrap">
           1$ = {rateLabel}
         </Text>
 
@@ -67,15 +67,15 @@ export function RateBadgeWithSettings() {
         <Flex
           align="center"
           justify="center"
-          w="7"
-          h="7"
-          borderRadius="full"
+          w="6"
+          h="6"
+          borderRadius="md"
           bg="blue.100"
           color="blue.700"
           flexShrink={0}
           aria-hidden
         >
-          <FontAwesomeIcon icon={faSliders} style={{ width: '0.75rem', height: '0.75rem' }} />
+          <FontAwesomeIcon icon={faSliders} style={{ width: '0.65rem', height: '0.65rem' }} />
         </Flex>
       </RateBadgeButton>
 

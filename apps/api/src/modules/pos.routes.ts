@@ -173,11 +173,48 @@ posRouter.get(
   asyncHandler(async (req, res) => {
     const { storeId } = requireStore(req);
     const rate = await getStoreRate(storeId);
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
     const customers = await prisma.customer.findMany({
-      where: { storeId, isActive: true },
+      where: {
+        storeId,
+        isActive: true,
+        ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
+      },
       orderBy: { name: 'asc' },
     });
     res.json(customers.map(c => serializeCustomer(c, rate)));
+  }),
+);
+
+posRouter.get(
+  '/customers/:id',
+  asyncHandler(async (req, res) => {
+    const { storeId } = requireStore(req);
+    const rate = await getStoreRate(storeId);
+    const customer = await prisma.customer.findFirst({
+      where: { id: req.params.id, storeId, isActive: true },
+      include: {
+        invoices: {
+          include: { lines: true, customer: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+    if (!customer) throw new AppError(404, 'CUSTOMER_NOT_FOUND', 'Cliente no encontrado');
+
+    const { invoices, ...rest } = customer;
+    const sortedInvoices = [...invoices].sort((a, b) => {
+      if (a.status !== b.status) {
+        if (a.status === 'PENDING') return -1;
+        if (b.status === 'PENDING') return 1;
+      }
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
+    res.json({
+      ...serializeCustomer(rest, rate),
+      invoices: sortedInvoices.map(inv => serializeInvoice(inv, rate)),
+    });
   }),
 );
 
@@ -277,6 +314,7 @@ const checkoutSchema = z.object({
     usd: z.number().optional(),
     mobileBs: z.number().optional(),
   }),
+  totalUsd: z.number().positive().optional(),
 });
 
 posRouter.post(

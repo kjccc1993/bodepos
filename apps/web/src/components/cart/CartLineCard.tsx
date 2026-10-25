@@ -26,14 +26,20 @@ function CartRemoveButton({ onRemove }: { onRemove: () => void }) {
       <Tooltip.Trigger asChild>
         <IconButton
           aria-label="Quitar del carrito"
-          size="xs"
-          variant="subtle"
+          variant="ghost"
           colorPalette="red"
           flexShrink={0}
           alignSelf="flex-start"
+          minW="6"
+          h="6"
+          p={0}
+          bg="transparent"
+          color="red.600"
+          _hover={{ bg: 'transparent', color: 'red.700' }}
+          _active={{ bg: 'transparent', color: 'red.800' }}
           onClick={onRemove}
         >
-          <FontAwesomeIcon icon={faTrash} style={{ width: '0.75rem', height: '0.75rem' }} />
+          <FontAwesomeIcon icon={faTrash} style={{ width: '0.8rem', height: '0.8rem' }} />
         </IconButton>
       </Tooltip.Trigger>
       <Portal>
@@ -78,7 +84,7 @@ export function CartLineCard({ line, rate, stock, onRemove, onUpdateQty }: Props
             else onUpdateQty(q);
           }}
           onStep={delta => {
-            const step = line.unit === 'UNIT' ? delta : line.unit === 'GRAM' ? delta * 100 : delta * 0.1;
+            const step = line.unit === 'UNIT' ? delta : delta * 100;
             const next = Math.max(0, line.quantity + step);
             if (next <= 0) onRemove();
             else onUpdateQty(next);

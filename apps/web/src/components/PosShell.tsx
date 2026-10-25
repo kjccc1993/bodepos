@@ -1,5 +1,6 @@
 import { Badge, Box, Button, Flex, Stack, Text } from '@chakra-ui/react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { NavIcon, type NavIconId } from '@/components/nav/NavIcons';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useBcvRateSync } from '@/lib/api/hooks';
@@ -116,12 +117,9 @@ export function PosShell() {
         py={5}
         px={3}
       >
-        <Text fontWeight="bold" fontSize="xl" color="green.700" letterSpacing="tight" px={2} mb={1}>
-          BodePOS
-        </Text>
-        <Text fontSize="xs" color="gray.500" px={2} mb={6}>
-          Punto de venta
-        </Text>
+        <Box px={1} mb={6}>
+          <BrandLogo size="sm" />
+        </Box>
 
         <Stack gap={1} flex="1">
           {tabs.map(tab => {

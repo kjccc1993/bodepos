@@ -1,66 +1,80 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { CustomerQuickCreateDialog } from '@/components/customers/CustomerQuickCreateDialog';
+import { CustomerListCard } from '@/components/customers/CustomerListCard';
+import { BackChevronLink } from '@/components/nav/BackChevronLink';
 import { GenericHeading, GenericInput, GenericText } from '@/components/ui';
-import { useCustomers, useSaveCustomer } from '@/lib/api/hooks';
-import { formatUsd } from '@/lib/money';
-import { apiFetch } from '@/lib/http/client';
+import { useCustomers } from '@/lib/api/hooks';
 
 export function CustomersPage() {
-  const { data: customers = [], refetch } = useCustomers();
-  const save = useSaveCustomer();
-  const [name, setName] = useState('');
-  const [showNew, setShowNew] = useState(false);
+  const nav = useNavigate();
+  const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const { data: customers = [] } = useCustomers(search);
 
   return (
-    <Stack gap={3} flex="1" minH={0} h={0} overflowY="auto">
-      <Flex align="center" gap={2}>
-        <Link to="/accounting">←</Link>
-        <GenericHeading>Clientes</GenericHeading>
-      </Flex>
-      <Button colorPalette="green" onClick={() => setShowNew(true)}>
-        Nuevo cliente
-      </Button>
-      {showNew && (
-        <Flex gap={2}>
-          <GenericInput placeholder="Nombre" value={name} onChange={e => setName(e.target.value)} flex="1" />
-          <Button
-            onClick={async () => {
-              await save.mutateAsync({ name });
-              setName('');
-              setShowNew(false);
-            }}
-          >
-            Guardar
+    <Flex
+      direction="column"
+      flex="1"
+      minH={0}
+      h={0}
+      mx={{ base: -3, lg: -5 }}
+      mt={{ base: -3, lg: -4 }}
+      mb={{ base: -3, lg: -4 }}
+    >
+      <Box flexShrink={0} px={3} pt={3} pb={2} bg="white" borderBottomWidth="1px" borderColor="gray.200">
+        <Flex align="center" gap={2}>
+          <BackChevronLink to="/accounting" aria-label="Volver a contabilidad" />
+          <GenericHeading flex="1" minW={0}>
+            Clientes
+          </GenericHeading>
+          <Button size="sm" colorPalette="blue" flexShrink={0} onClick={() => setCreateOpen(true)}>
+            Nuevo
           </Button>
         </Flex>
-      )}
-      {customers.map(c => (
-        <Box key={c.id} bg="white" p={3} borderRadius="md" borderWidth="1px">
-          <Flex justify="space-between">
-            <GenericText variant="strong">{c.name}</GenericText>
-            <GenericText variant="body">
-              {formatUsd(c.debtUsd)} / Bs {c.debtBs.toLocaleString('es-VE')}
-            </GenericText>
-          </Flex>
-          <Button
-            size="xs"
-            mt={2}
-            variant="outline"
-            onClick={async () => {
-              const raw = prompt('Abono en USD', '1');
-              if (!raw) return;
-              await apiFetch(`/customers/${c.id}/payments`, {
-                method: 'POST',
-                body: JSON.stringify({ amountUsd: Number(raw), method: 'efectivo' }),
-              });
-              void refetch();
-            }}
-          >
-            Registrar abono
-          </Button>
-        </Box>
-      ))}
-    </Stack>
+      </Box>
+
+      <Box
+        flexShrink={0}
+        px={3}
+        py={2}
+        bg="gray.50"
+        borderBottomWidth="1px"
+        borderColor="gray.200"
+      >
+        <GenericInput
+          placeholder="Buscar por nombre"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          size="lg"
+          h="12"
+          boxShadow="sm"
+        />
+      </Box>
+
+      <Box flex="1" minH={0} h={0} overflowY="auto" overscrollBehavior="contain" px={3} py={3} pb={4}>
+        <Stack gap={2}>
+          {customers.map(c => (
+            <CustomerListCard
+              key={c.id}
+              customer={c}
+              onOpen={() => nav(`/accounting/customers/${c.id}`)}
+            />
+          ))}
+        </Stack>
+        {customers.length === 0 && (
+          <GenericText variant="muted" textAlign="center" py={8}>
+            No hay clientes. Prueba otra búsqueda o crea uno nuevo.
+          </GenericText>
+        )}
+      </Box>
+
+      <CustomerQuickCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => setCreateOpen(false)}
+      />
+    </Flex>
   );
 }

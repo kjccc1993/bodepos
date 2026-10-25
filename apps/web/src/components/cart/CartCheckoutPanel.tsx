@@ -1,5 +1,6 @@
 import { Box, Button, Flex } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { PayCheckoutDialog } from '@/components/cart/PayCheckoutDialog';
 import { GenericText } from '@/components/ui';
 import { formatBs, formatUsd } from '@/lib/money';
 
@@ -20,9 +21,11 @@ export function CartCheckoutPanel({
   payDisabled = false,
 }: Props) {
   const isSidebar = variant === 'sidebar';
+  const [payOpen, setPayOpen] = useState(false);
 
   return (
-    <Box
+    <>
+      <Box
       flex={{ base: '0 0 auto', md: isSidebar ? '0 0 auto' : '1' }}
       flexShrink={0}
       minW={0}
@@ -70,16 +73,21 @@ export function CartCheckoutPanel({
         >
           Vaciar
         </Button>
-        {payDisabled ? (
-          <Button flex="1" minW={0} size="lg" minH="12" py={3} colorPalette="green" disabled>
-            Ir a pagar
-          </Button>
-        ) : (
-          <Button asChild flex="1" minW={0} size="lg" minH="12" py={3} colorPalette="green">
-            <Link to="/pay">Ir a pagar</Link>
-          </Button>
-        )}
+        <Button
+          flex="1"
+          minW={0}
+          size="lg"
+          minH="12"
+          py={3}
+          colorPalette="green"
+          disabled={payDisabled}
+          onClick={() => setPayOpen(true)}
+        >
+          Ir a pagar
+        </Button>
       </Flex>
-    </Box>
+      </Box>
+      <PayCheckoutDialog open={payOpen} onClose={() => setPayOpen(false)} />
+    </>
   );
 }

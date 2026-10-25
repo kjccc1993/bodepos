@@ -14,7 +14,7 @@ export type CheckoutPayments = {
 };
 export type CheckoutChange = { bs?: number; usd?: number; mobileBs?: number };
 
-/** Precio catálogo en USD por kg (GRAM/KG) o por unidad (UNIT). Cantidad: gramos, kg o unidades. */
+/** Precio catálogo en USD por kg (GRAM, cantidad en g) o por unidad (UNIT). */
 function billableQuantity(quantity: number, unit: ProductUnit): number {
   if (unit === ProductUnit.GRAM) return quantity / 1000;
   return quantity;
@@ -29,6 +29,8 @@ export type CheckoutInput = {
   lines: CheckoutLine[];
   payments: CheckoutPayments;
   change: CheckoutChange;
+  /** Total a cobrar; no puede ser menor que la suma de líneas. */
+  totalUsd?: number;
 };
 
 export async function executeCheckout(input: CheckoutInput) {
@@ -53,7 +55,7 @@ export async function executeCheckout(input: CheckoutInput) {
   });
   const productMap = new Map(products.map(p => [p.id, p]));
 
-  let totalUsd = 0;
+  let linesTotalUsd = 0;
   const lineData: Prisma.InvoiceLineCreateWithoutInvoiceInput[] = [];
 
   for (const line of input.lines) {
@@ -62,7 +64,7 @@ export async function executeCheckout(input: CheckoutInput) {
     if (line.quantity <= 0) throw new AppError(422, 'INVALID_QTY', 'Cantidad inválida');
     const unitPrice = toNumber(product.priceUsd);
     const lineTotal = roundUsd(unitPrice * billableQuantity(line.quantity, product.unit));
-    totalUsd = roundUsd(totalUsd + lineTotal);
+    linesTotalUsd = roundUsd(linesTotalUsd + lineTotal);
     lineData.push({
       product: { connect: { id: product.id } },
       productName: product.name,
@@ -71,6 +73,15 @@ export async function executeCheckout(input: CheckoutInput) {
       unitPriceUsd: unitPrice,
       lineTotalUsd: lineTotal,
     });
+  }
+
+  let totalUsd = linesTotalUsd;
+  if (input.totalUsd != null) {
+    const requested = roundUsd(input.totalUsd);
+    if (requested + 0.0001 < linesTotalUsd) {
+      throw new AppError(422, 'TOTAL_TOO_LOW', 'El total no puede ser menor al del carrito');
+    }
+    totalUsd = requested;
   }
 
   const totalBs = usdToBs(totalUsd, rate);

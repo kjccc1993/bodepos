@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http/client';
-import type { Customer, ExchangeRateRefreshResult, Invoice, Product, StoreSettings } from '@/lib/types';
+import type {
+  Customer,
+  CustomerDetail,
+  ExchangeRateRefreshResult,
+  Invoice,
+  InvoiceSummary,
+  Product,
+  StoreSettings,
+} from '@/lib/types';
 import { cacheCatalog, flushOutbox, getCachedProducts, pullSync } from '@/lib/offline/sync';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -52,10 +60,22 @@ export function useProducts(search = '') {
   });
 }
 
-export function useCustomers() {
+export function useCustomers(search = '') {
   return useQuery({
-    queryKey: ['customers'],
-    queryFn: () => apiFetch<Customer[]>('/customers'),
+    queryKey: ['customers', search],
+    queryFn: () => {
+      const q = search.trim();
+      const suffix = q ? `?q=${encodeURIComponent(q)}` : '';
+      return apiFetch<Customer[]>(`/customers${suffix}`);
+    },
+  });
+}
+
+export function useCustomerDetail(customerId: string | undefined) {
+  return useQuery({
+    queryKey: ['customer', customerId],
+    queryFn: () => apiFetch<CustomerDetail>(`/customers/${customerId}`),
+    enabled: Boolean(customerId),
   });
 }
 
@@ -69,7 +89,7 @@ export function useInvoices(date: string) {
 export function useInvoiceSummary(date: string) {
   return useQuery({
     queryKey: ['invoice-summary', date],
-    queryFn: () => apiFetch<Record<string, number>>(`/invoices/summary?date=${date}`),
+    queryFn: () => apiFetch<InvoiceSummary>(`/invoices/summary?date=${date}`),
   });
 }
 
@@ -111,7 +131,7 @@ export function useSaveProduct() {
 export function useSaveCustomer() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; phone?: string }) =>
+    mutationFn: (body: { name: string; phone?: string; debtUsd?: number }) =>
       apiFetch<Customer>('/customers', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['customers'] }),
   });

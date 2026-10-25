@@ -1,10 +1,12 @@
-import { Flex } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
 import { NavIconCart } from '@/components/nav/NavIcons';
 
 export function CartHeaderIcon({ itemCount }: { itemCount: number }) {
   const active = itemCount > 0;
   const label = itemCount > 0 ? `Carrito, ${itemCount} productos` : 'Carrito';
+  const badgeText = itemCount > 99 ? '99+' : String(itemCount);
+  const badgeWide = badgeText.length > 1;
 
   return (
     <Link to="/cart" aria-label={label} style={{ textDecoration: 'none' }}>
@@ -12,34 +14,46 @@ export function CartHeaderIcon({ itemCount }: { itemCount: number }) {
         align="center"
         justify="center"
         position="relative"
-        w="11"
-        h="11"
+        flexShrink={0}
+        w="8"
+        h="8"
+        minW="8"
         borderRadius="md"
+        borderWidth="1px"
+        borderColor={active ? 'green.200' : 'gray.200'}
+        bg={active ? 'green.50' : 'white'}
         color={active ? 'green.700' : 'gray.600'}
-        _hover={{ bg: 'gray.100' }}
-        _active={{ bg: 'gray.200' }}
+        boxShadow="0 1px 2px rgba(15, 23, 42, 0.04)"
+        _hover={{ bg: active ? 'green.100' : 'gray.50' }}
+        _active={{ bg: active ? 'green.100' : 'gray.100' }}
       >
-        <NavIconCart size={24} color={active ? '#15803d' : '#64748b'} />
+        <NavIconCart size={18} color={active ? '#15803d' : '#64748b'} />
         {itemCount > 0 && (
           <Flex
             position="absolute"
-            top="0"
-            right="0"
-            minW="4.5"
-            h="4.5"
-            px={1}
+            top="-1"
+            right="-1"
+            minW={badgeWide ? '4' : '4'}
+            h="4"
+            px={badgeWide ? 0.5 : 0}
             borderRadius="full"
             bg="green.600"
             color="white"
-            fontSize="2xs"
-            fontWeight="bold"
             align="center"
             justify="center"
-            borderWidth="2px"
+            borderWidth="1px"
             borderColor="white"
-            transform="translate(25%, -25%)"
+            pointerEvents="none"
           >
-            {itemCount > 99 ? '99+' : itemCount}
+            <Text
+              as="span"
+              fontSize="10px"
+              lineHeight="1"
+              fontWeight="semibold"
+              fontVariantNumeric="tabular-nums"
+            >
+              {badgeText}
+            </Text>
           </Flex>
         )}
       </Flex>

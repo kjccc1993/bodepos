@@ -64,7 +64,6 @@ model User {
 enum ProductUnit {
   UNIT
   GRAM
-  KG
 
   @@schema("bodepos")
 }

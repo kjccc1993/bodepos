@@ -26,7 +26,7 @@ export function PosClientHeader({
     <Box flexShrink={0} px={3} pt={3} pb={2} bg="white" borderBottomWidth="1px" borderColor="gray.200">
       <Flex justify="space-between" align="center" gap={2} mb={2}>
         <GenericHeading>{title}</GenericHeading>
-        <Flex gap={2} align="center" flexShrink={0}>
+        <Flex gap={1.5} align="center" flexShrink={0}>
           <RateBadgeWithSettings />
           <Box display={hideCartIconFromMd ? { base: 'block', md: 'none' } : 'block'}>
             <CartHeaderIcon itemCount={itemCount} />

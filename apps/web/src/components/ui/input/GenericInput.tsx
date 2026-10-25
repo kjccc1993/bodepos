@@ -1,7 +1,7 @@
 import { Input, type InputProps } from '@chakra-ui/react';
 import { forwardRef, type ChangeEvent } from 'react';
 import { disabledFieldStyles } from '@/components/ui/field-disabled-styles';
-import { FORM_CONTROL_BORDER_RADIUS, resolveFormControlHeight } from '@/components/ui/form-control-metrics';
+import { FORM_CONTROL_BORDER_RADIUS, formControlFieldHeight } from '@/components/ui/form-control-metrics';
 import { sanitizeDecimalInput, sanitizeIntegerInput } from '@/lib/utils/numeric-input';
 
 export type GenericInputProps = InputProps & {
@@ -16,8 +16,7 @@ export const GenericInput = forwardRef<HTMLInputElement, GenericInputProps>(func
   { invalid, size = 'md', integer = false, decimal = false, inputMode, onChange, ...props },
   ref,
 ) {
-  const resolvedHeight = resolveFormControlHeight(size);
-  const fieldHeight = { base: 'touch', lg: resolvedHeight };
+  const fieldHeight = formControlFieldHeight(size);
 
   const resolvedInputMode = inputMode ?? (decimal ? 'decimal' : integer ? 'numeric' : undefined);
 

@@ -1,7 +1,7 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { GenericHeading, GenericInput, GenericText } from '@/components/ui';
+import { BackChevronLink } from '@/components/nav/BackChevronLink';
+import { GenericDatePicker, GenericHeading, GenericInput, GenericText } from '@/components/ui';
 import { apiFetch } from '@/lib/http/client';
 import { useDailyIncomes } from '@/lib/api/hooks';
 
@@ -44,10 +44,17 @@ export function DailyIncomesPage() {
   return (
     <Stack gap={3} flex="1" minH={0} h={0} overflowY="auto">
       <Flex align="center" gap={2}>
-        <Link to="/accounting">←</Link>
+        <BackChevronLink to="/accounting" aria-label="Volver a contabilidad" />
         <GenericHeading>Ingresos diarios</GenericHeading>
       </Flex>
-      <GenericInput type="date" value={date} onChange={e => setDate(e.target.value)} />
+      <GenericDatePicker
+        value={date}
+        onChange={v => {
+          if (v) setDate(v);
+        }}
+        locale="es"
+        aria-label="Fecha del ingreso"
+      />
       <Field label="Divisas" value={form.usdCash} onChange={v => setForm(f => ({ ...f, usdCash: v }))} />
       <Field label="Efectivo Bs" value={form.cashBs} onChange={v => setForm(f => ({ ...f, cashBs: v }))} />
       <Field label="Punto de venta" value={form.posBs} onChange={v => setForm(f => ({ ...f, posBs: v }))} />

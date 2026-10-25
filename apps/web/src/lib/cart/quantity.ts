@@ -1,32 +1,27 @@
+import { roundUsd } from '@/lib/money';
 import type { CartLine, ProductUnit } from '@/lib/types';
 
-/** Precio en catálogo: por unidad o por kilogramo (GRAM/KG). */
+/** Precio en catálogo: por unidad (UNIT) o por kg con cantidad en gramos (GRAM). */
 export function toBillingQuantity(quantity: number, unit: ProductUnit): number {
   if (unit === 'GRAM') return quantity / 1000;
   return quantity;
 }
 
 export function lineTotalUsd(line: Pick<CartLine, 'unitPriceUsd' | 'quantity' | 'unit'>): number {
-  return Math.round(line.unitPriceUsd * toBillingQuantity(line.quantity, line.unit) * 10000) / 10000;
+  return roundUsd(line.unitPriceUsd * toBillingQuantity(line.quantity, line.unit));
 }
 
 export function quantityFieldLabel(unit: ProductUnit): string {
-  if (unit === 'UNIT') return 'Cant.';
-  if (unit === 'GRAM') return 'Gramos';
-  return 'Kg';
+  return unit === 'UNIT' ? 'Cant.' : 'Gramos';
 }
 
 export function quantityUnitHint(unit: ProductUnit): string {
-  if (unit === 'UNIT') return 'Unidad(es)';
-  if (unit === 'GRAM') return 'Gramos';
-  return 'Kilogramos';
+  return unit === 'UNIT' ? 'Unidad(es)' : 'Gramos';
 }
 
 /** Etiqueta corta encima del stepper en Vender. */
 export function quantityStepperLabel(unit: ProductUnit): string {
-  if (unit === 'UNIT') return 'Unidades';
-  if (unit === 'GRAM') return 'Gramos';
-  return 'Kilos';
+  return unit === 'UNIT' ? 'Unidades' : 'Gramos';
 }
 
 export function quantityPlaceholder(_unit: ProductUnit): string {

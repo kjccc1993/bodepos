@@ -22,3 +22,9 @@ export function normalizeFormControlSize(size: unknown): FormControlSize {
 export function resolveFormControlHeight(size: unknown): string {
   return FORM_CONTROL_HEIGHT[normalizeFormControlSize(size)];
 }
+
+/** Misma altura en todos los breakpoints (evita `touch` 44px en móvil salvo que lo pases explícito). */
+export function formControlFieldHeight(size: unknown = 'md') {
+  const h = resolveFormControlHeight(size);
+  return { base: h, lg: h } as const;
+}

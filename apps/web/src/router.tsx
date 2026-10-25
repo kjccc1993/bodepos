@@ -4,10 +4,10 @@ import { LoginPage } from '@/pages/LoginPage';
 import { SellPage } from '@/pages/SellPage';
 import { ProductsPage } from '@/pages/ProductsPage';
 import { CartPage } from '@/pages/CartPage';
-import { PayPage } from '@/pages/PayPage';
 import { AccountingPage } from '@/pages/AccountingPage';
 import { InvoicesPage } from '@/pages/InvoicesPage';
 import { DailyIncomesPage } from '@/pages/DailyIncomesPage';
+import { CustomerDetailPage } from '@/pages/CustomerDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { getToken } from '@/lib/http/client';
 
@@ -30,11 +30,11 @@ export const router = createBrowserRouter([
       { path: 'sell', element: <SellPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'cart', element: <CartPage /> },
-      { path: 'pay', element: <PayPage /> },
       { path: 'accounting', element: <AccountingPage /> },
       { path: 'accounting/invoices', element: <InvoicesPage /> },
       { path: 'accounting/daily-incomes', element: <DailyIncomesPage /> },
       { path: 'accounting/customers', element: <CustomersPage /> },
+      { path: 'accounting/customers/:customerId', element: <CustomerDetailPage /> },
       { path: 'settings', element: <Navigate to="/sell" replace /> },
     ],
   },

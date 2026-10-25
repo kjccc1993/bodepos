@@ -1,12 +1,12 @@
-import { Box, Button, Flex, Link as RLink, Stack } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
+import { Box, Button, Flex, Stack } from '@chakra-ui/react';
+import { NavChevronButton } from '@/components/nav/NavChevronButton';
 import { GenericHeading } from '@/components/ui';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 const links = [
   { to: '/accounting/invoices', label: 'Facturas de ventas' },
   { to: '/accounting/daily-incomes', label: 'Ingresos diarios' },
-  { to: '/accounting/customers', label: 'Clientes (CxC)' },
+  { to: '/accounting/customers', label: 'Clientes' },
 ];
 
 export function AccountingPage() {
@@ -19,14 +19,7 @@ export function AccountingPage() {
           Contabilidad
         </GenericHeading>
         {links.map(l => (
-          <RLink asChild key={l.to}>
-            <Link
-              to={l.to}
-              style={{ padding: '12px', background: 'white', borderRadius: 8, border: '1px solid #e2e8f0' }}
-            >
-              {l.label}
-            </Link>
-          </RLink>
+          <NavChevronButton key={l.to} to={l.to} label={l.label} />
         ))}
       </Stack>
 

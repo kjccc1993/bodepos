@@ -1,8 +1,14 @@
 import { createSystem, defaultConfig } from '@chakra-ui/react';
 
+const robotoStack = "'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif";
+
 export const system = createSystem(defaultConfig, {
   theme: {
     tokens: {
+      fonts: {
+        body: { value: robotoStack },
+        heading: { value: robotoStack },
+      },
       colors: {
         brand: {
           50: { value: '#f0fdf4' },

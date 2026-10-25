@@ -93,7 +93,7 @@ function StackEmpty() {
       </GenericText>
       <Link to="/sell">
         <Button colorPalette="green" variant="outline">
-          Volver a vender
+          Agregar
         </Button>
       </Link>
     </Flex>
