@@ -29,7 +29,6 @@ export function InvoiceStatusBadge({ status }: { status: Invoice['status'] }) {
       bg={s.bg}
       borderWidth="1px"
       borderColor={s.border}
-      alignSelf="flex-start"
       w="fit-content"
       flexShrink={0}
     >

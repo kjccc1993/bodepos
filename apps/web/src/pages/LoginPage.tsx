@@ -37,7 +37,18 @@ export function LoginPage() {
 
   return (
     <FlexCenter>
-      <Box as="form" onSubmit={onSubmit} w="full" maxW="md" p={6} bg="white" borderRadius="lg" shadow="md">
+      <Box
+        as="form"
+        onSubmit={onSubmit}
+        w="full"
+        maxW="md"
+        p={6}
+        bg="white"
+        borderRadius="xl"
+        borderWidth="1px"
+        borderColor="gray.200"
+        boxShadow="lift"
+      >
         <BrandLogo size="lg" mx="auto" display="block" mb={3} />
         <GenericText variant="muted" mb={4}>
           Punto de venta para bodegas
@@ -51,7 +62,7 @@ export function LoginPage() {
             type="password"
           />
           {error && <GenericText variant="error">{error}</GenericText>}
-          <Button type="submit" colorPalette="green" loading={loading}>
+          <Button type="submit" colorPalette="green" borderRadius="xl" w="full" size="lg" loading={loading}>
             Entrar
           </Button>
         </Stack>
@@ -62,7 +73,7 @@ export function LoginPage() {
 
 function FlexCenter({ children }: { children: React.ReactNode }) {
   return (
-    <Box minH="100dvh" display="flex" alignItems="center" justifyContent="center" px={4} bg="gray.50">
+    <Box minH="100dvh" display="flex" alignItems="center" justifyContent="center" px={4} bg="surface.page">
       {children}
     </Box>
   );

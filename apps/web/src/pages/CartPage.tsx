@@ -1,27 +1,21 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CartCheckoutPanel } from '@/components/cart/CartCheckoutPanel';
 import { CartLineCard } from '@/components/cart/CartLineCard';
+import { ClientSlotButtons } from '@/components/sell/ClientSlotButtons';
 import { PosClientHeader } from '@/components/sell/PosClientHeader';
 import { GenericText } from '@/components/ui';
 import { useCart } from '@/lib/cart/CartContext';
 import { lineTotalUsd } from '@/lib/cart/quantity';
 import { usdToBs } from '@/lib/money';
-import { useProducts, useStoreSettings } from '@/lib/api/hooks';
+import { useProductStockMap, useStoreSettings } from '@/lib/api/hooks';
 import { effectiveRate } from '@/lib/rate';
 
 export function CartPage() {
   const { lines, updateQty, removeLine, clearCart, activeSlot, setActiveSlot, itemCount } = useCart();
   const { data: settings } = useStoreSettings();
   const rate = effectiveRate(settings);
-  const { data: catalog = [] } = useProducts('');
-
-  const stockById = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const p of catalog) map.set(p.id, p.stock);
-    return map;
-  }, [catalog]);
+  const { data: stockById = new Map<string, number>() } = useProductStockMap();
 
   const totalUsd = lines.reduce((a, l) => a + lineTotalUsd(l), 0);
   const totalBs = usdToBs(totalUsd, rate);
@@ -39,8 +33,8 @@ export function CartPage() {
       <PosClientHeader
         title="Completar compra"
         itemCount={itemCount}
-        activeSlot={activeSlot}
-        onSlotChange={setActiveSlot}
+        backTo="/sell"
+        backAriaLabel="Volver a vender"
       />
 
       <Flex
@@ -50,15 +44,18 @@ export function CartPage() {
         h={0}
         align="stretch"
       >
-        <Box
-          flex={{ base: '1', md: '2' }}
-          minW={0}
-          minH={0}
-          overflowY="auto"
-          overscrollBehavior="contain"
-          px={3}
-          py={3}
-        >
+        <Flex direction="column" flex={{ base: '1', md: '2' }} minW={0} minH={0}>
+          <Box
+            flexShrink={0}
+            px={3}
+            py={2}
+            bg="white"
+            borderBottomWidth="1px"
+            borderColor="gray.200"
+          >
+            <ClientSlotButtons activeSlot={activeSlot} onSlotChange={setActiveSlot} />
+          </Box>
+          <Box flex="1" minH={0} overflowY="auto" overscrollBehavior="contain" px={3} py={3}>
           {lines.length === 0 ? (
             <StackEmpty />
           ) : (
@@ -75,7 +72,8 @@ export function CartPage() {
               ))}
             </Stack>
           )}
-        </Box>
+          </Box>
+        </Flex>
 
         {lines.length > 0 && (
           <CartCheckoutPanel totalUsd={totalUsd} totalBs={totalBs} onClear={clearCart} />
@@ -92,7 +90,7 @@ function StackEmpty() {
         No hay nada en este carrito.
       </GenericText>
       <Link to="/sell">
-        <Button colorPalette="green" variant="outline">
+        <Button colorPalette="brand" variant="solid" borderRadius="xl">
           Agregar
         </Button>
       </Link>

@@ -1,16 +1,18 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
+import { Navigate } from 'react-router-dom';
 import { NavChevronButton } from '@/components/nav/NavChevronButton';
 import { GenericHeading } from '@/components/ui';
 import { useAuth } from '@/lib/auth/AuthContext';
-
-const links = [
-  { to: '/accounting/invoices', label: 'Facturas de ventas' },
-  { to: '/accounting/daily-incomes', label: 'Ingresos diarios' },
-  { to: '/accounting/customers', label: 'Clientes' },
-];
+import { accountingNavLinks } from '@/lib/nav/accounting-nav';
+import { useIsDesktopNav } from '@/lib/nav/useIsDesktopNav';
 
 export function AccountingPage() {
   const { logout } = useAuth();
+  const isDesktopNav = useIsDesktopNav();
+
+  if (isDesktopNav) {
+    return <Navigate to="/accounting/invoices" replace />;
+  }
 
   return (
     <Flex direction="column" flex="1" minH={0} w="full">
@@ -18,7 +20,7 @@ export function AccountingPage() {
         <GenericHeading variant="page" fontSize="xl">
           Contabilidad
         </GenericHeading>
-        {links.map(l => (
+        {accountingNavLinks.map(l => (
           <NavChevronButton key={l.to} to={l.to} label={l.label} />
         ))}
       </Stack>

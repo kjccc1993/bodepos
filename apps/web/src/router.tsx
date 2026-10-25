@@ -1,8 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { PosShell } from '@/components/PosShell';
+import { PosTradeKeepAliveLayout } from '@/components/PosTradeKeepAliveLayout';
 import { LoginPage } from '@/pages/LoginPage';
-import { SellPage } from '@/pages/SellPage';
-import { ProductsPage } from '@/pages/ProductsPage';
 import { CartPage } from '@/pages/CartPage';
 import { AccountingPage } from '@/pages/AccountingPage';
 import { InvoicesPage } from '@/pages/InvoicesPage';
@@ -27,8 +26,13 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Navigate to="/sell" replace /> },
-      { path: 'sell', element: <SellPage /> },
-      { path: 'products', element: <ProductsPage /> },
+      {
+        element: <PosTradeKeepAliveLayout />,
+        children: [
+          { path: 'sell' },
+          { path: 'products' },
+        ],
+      },
       { path: 'cart', element: <CartPage /> },
       { path: 'accounting', element: <AccountingPage /> },
       { path: 'accounting/invoices', element: <InvoicesPage /> },

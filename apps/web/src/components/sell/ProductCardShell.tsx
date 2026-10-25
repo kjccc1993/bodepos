@@ -1,6 +1,7 @@
 import { Badge, Box, Flex, Stack, type StackProps } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { GenericText } from '@/components/ui';
+import { cartHighlightProps, softCardProps } from '@/lib/design/surface-styles';
 import { formatBs, formatUsd } from '@/lib/money';
 import type { Product } from '@/lib/types';
 
@@ -42,15 +43,12 @@ export function ProductCardShell({
   return (
     <Stack
       gap={1}
-      p={{ base: 1.5, md: 2 }}
-      bg={highlight ? 'green.50' : 'white'}
-      borderRadius="lg"
-      borderWidth="1px"
-      borderColor={highlight ? 'green.200' : 'gray.200'}
+      p={{ base: '9px', md: '11px' }}
+      {...softCardProps}
+      {...(highlight ? cartHighlightProps : {})}
       w="full"
       h={h ?? 'auto'}
       minW={0}
-      boxShadow="sm"
     >
       <Flex align="start" justify="space-between" gap={1.5} flexShrink={0} overflow="hidden" minH="2.6em">
         <GenericText

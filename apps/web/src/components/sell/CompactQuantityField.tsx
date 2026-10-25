@@ -44,10 +44,10 @@ export function CompactQuantityField({
         h="9"
         borderWidth="1px"
         borderColor="gray.300"
-        borderRadius="md"
+        borderRadius="lg"
         bg="white"
         overflow="hidden"
-        boxShadow="sm"
+        boxShadow="card"
       >
         <Button
           variant="ghost"

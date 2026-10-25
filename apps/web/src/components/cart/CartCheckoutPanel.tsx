@@ -2,6 +2,7 @@ import { Box, Button, Flex } from '@chakra-ui/react';
 import { useState } from 'react';
 import { PayCheckoutDialog } from '@/components/cart/PayCheckoutDialog';
 import { GenericText } from '@/components/ui';
+import { primarySolidButtonProps } from '@/lib/design/surface-styles';
 import { formatBs, formatUsd } from '@/lib/money';
 
 type Props = {
@@ -40,7 +41,7 @@ export function CartCheckoutPanel({
       display="flex"
       flexDirection="column"
     >
-      <Box mb={3} p={3} bg="gray.50" borderRadius="lg" borderWidth="1px" borderColor="gray.200">
+      <Box mb={3} p={3} bg="surface.page" borderRadius="xl" borderWidth="1px" borderColor="gray.100">
         <Flex justify="space-between" align="baseline" gap={2}>
           <GenericText variant="label">Total USD</GenericText>
           <GenericText variant="price" fontSize="lg">
@@ -63,13 +64,14 @@ export function CartCheckoutPanel({
           minH="12"
           py={3}
           variant="outline"
+          borderRadius="xl"
           colorPalette="red"
-          bg="red.50"
+          bg="white"
           borderColor="red.200"
           color="red.700"
-          _hover={{ bg: 'red.100' }}
-          onClick={onClear}
+          _hover={{ bg: 'red.50' }}
           disabled={totalUsd <= 0}
+          onClick={onClear}
         >
           Vaciar
         </Button>
@@ -79,7 +81,8 @@ export function CartCheckoutPanel({
           size="lg"
           minH="12"
           py={3}
-          colorPalette="green"
+          variant="solid"
+          {...primarySolidButtonProps}
           disabled={payDisabled}
           onClick={() => setPayOpen(true)}
         >

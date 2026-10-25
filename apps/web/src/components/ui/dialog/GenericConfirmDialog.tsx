@@ -32,7 +32,7 @@ export function GenericConfirmDialog({
       <Portal>
         <Dialog.Backdrop bg="blackAlpha.600" />
         <Dialog.Positioner p={4}>
-          <Dialog.Content maxW="sm" w="full" borderRadius="lg" boxShadow="xl" bg="white">
+          <Dialog.Content maxW="sm" w="full" borderRadius="xl" borderWidth="1px" borderColor="gray.200" boxShadow="lift" bg="white">
             <Dialog.Header px={4} pt={4} pb={2}>
               <Dialog.Title fontSize="md" fontWeight="semibold">
                 {title}

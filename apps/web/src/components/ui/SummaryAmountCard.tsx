@@ -43,7 +43,7 @@ export function SummaryAmountHeader({
 
 export function SummaryAmountCard(props: SummaryAmountHeaderProps) {
   return (
-    <Box bg="white" borderRadius="md" borderWidth="1px" overflow="hidden">
+    <Box bg="white" borderRadius="xl" borderWidth="1px" borderColor="gray.200" boxShadow="soft" overflow="hidden">
       <SummaryAmountHeader {...props} />
     </Box>
   );

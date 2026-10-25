@@ -2,6 +2,7 @@ import { Input, type InputProps } from '@chakra-ui/react';
 import { forwardRef, type ChangeEvent } from 'react';
 import { disabledFieldStyles } from '@/components/ui/field-disabled-styles';
 import { FORM_CONTROL_BORDER_RADIUS, formControlFieldHeight } from '@/components/ui/form-control-metrics';
+import { inputFocusProps } from '@/lib/design/surface-styles';
 import { sanitizeDecimalInput, sanitizeIntegerInput } from '@/lib/utils/numeric-input';
 
 export type GenericInputProps = InputProps & {
@@ -40,12 +41,7 @@ export const GenericInput = forwardRef<HTMLInputElement, GenericInputProps>(func
       borderColor={borderColor(invalid)}
       _placeholder={{ color: 'gray.400' }}
       _hover={{ borderColor: invalid ? 'red.500' : 'gray.400' }}
-      _focusVisible={{
-        borderColor: invalid ? 'red.500' : 'green.500',
-        outline: '2px solid',
-        outlineColor: 'green.200',
-        outlineOffset: '0px',
-      }}
+      _focusVisible={invalid ? { borderColor: 'red.500', outline: '2px solid', outlineColor: 'red.100', outlineOffset: '0px' } : inputFocusProps}
       inputMode={resolvedInputMode}
       onChange={handleChange}
       {...disabledFieldStyles}

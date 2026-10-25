@@ -6,6 +6,7 @@ import {
   formControlFieldHeight,
   type FormControlSize,
 } from '@/components/ui/form-control-metrics';
+import { inputFocusProps } from '@/lib/design/surface-styles';
 
 export type SelectOption = { value: string; label: string };
 
@@ -68,12 +69,11 @@ export function GenericSelect({
           bg="transparent"
           borderWidth="1px"
           borderColor={borderColor}
-          _focusVisible={{
-            borderColor: invalid ? 'red.500' : 'green.500',
-            outline: '2px solid',
-            outlineColor: 'green.200',
-            outlineOffset: '0px',
-          }}
+          _focusVisible={
+            invalid
+              ? { borderColor: 'red.500', outline: '2px solid', outlineColor: 'red.100', outlineOffset: '0px' }
+              : inputFocusProps
+          }
           {...disabledFieldStyles}
         >
           <Select.ValueText placeholder={placeholder} flex="1" minW={0} overflow="hidden" />

@@ -9,6 +9,7 @@ import type {
   Product,
   StoreSettings,
 } from '@/lib/types';
+import { fetchAllProductsForCache } from '@/lib/api/products-page';
 import { cacheCatalog, flushOutbox, getCachedProducts, pullSync } from '@/lib/offline/sync';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -41,22 +42,41 @@ export function useBcvRateSync() {
   });
 }
 
-export function useProducts(search = '') {
+/** Sincroniza catálogo offline en segundo plano (no bloquea listados paginados). */
+export function useCatalogBackgroundSync(enabled = true) {
+  const qc = useQueryClient();
   return useQuery({
-    queryKey: ['products', search],
+    queryKey: ['catalog-background-sync'],
+    enabled,
     queryFn: async () => {
-      try {
-        const q = search ? `?q=${encodeURIComponent(search)}` : '';
-        const list = await apiFetch<Product[]>(`/products${q}`);
-        const customers = await apiFetch<Customer[]>('/customers').catch(() => [] as Customer[]);
-        await cacheCatalog(list, customers);
-        void pullSync(localStorage.getItem('bodepos_last_sync') ?? undefined);
-        void flushOutbox();
-        return list;
-      } catch {
-        return getCachedProducts();
-      }
+      const customers = await apiFetch<Customer[]>('/customers').catch(() => [] as Customer[]);
+      const products = await fetchAllProductsForCache();
+      await cacheCatalog(products, customers);
+      await pullSync(localStorage.getItem('bodepos_last_sync') ?? undefined);
+      await flushOutbox();
+      qc.setQueryData(['product-stock-map'], buildStockMap(products));
+      return { productCount: products.length };
     },
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+function buildStockMap(products: Product[]) {
+  return new Map(products.map(p => [p.id, p.stock]));
+}
+
+/** Mapa id → stock (Dexie o última sync). */
+export function useProductStockMap() {
+  return useQuery({
+    queryKey: ['product-stock-map'],
+    queryFn: async () => {
+      const cached = await getCachedProducts();
+      if (cached.length > 0) return buildStockMap(cached);
+      const products = await fetchAllProductsForCache();
+      return buildStockMap(products);
+    },
+    staleTime: 60_000,
   });
 }
 
@@ -108,7 +128,9 @@ export function useUpdateStoreSettings() {
     onSuccess: data => {
       qc.setQueryData(['store-settings'], data);
       qc.invalidateQueries({ queryKey: ['exchange-rate-refresh'] });
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['products-infinite'] });
+      qc.invalidateQueries({ queryKey: ['catalog-background-sync'] });
+      qc.invalidateQueries({ queryKey: ['product-stock-map'] });
     },
   });
 }
@@ -124,7 +146,11 @@ export function useSaveProduct() {
       const { id: _id, ...rest } = body;
       return apiFetch<Product>('/products', { method: 'POST', body: JSON.stringify(rest) });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['products'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['products-infinite'] });
+      qc.invalidateQueries({ queryKey: ['catalog-background-sync'] });
+      qc.invalidateQueries({ queryKey: ['product-stock-map'] });
+    },
   });
 }
 

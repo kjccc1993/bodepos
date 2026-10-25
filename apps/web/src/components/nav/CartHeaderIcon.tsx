@@ -18,16 +18,16 @@ export function CartHeaderIcon({ itemCount }: { itemCount: number }) {
         w="8"
         h="8"
         minW="8"
-        borderRadius="md"
+        borderRadius="lg"
         borderWidth="1px"
         borderColor={active ? 'green.200' : 'gray.200'}
         bg={active ? 'green.50' : 'white'}
         color={active ? 'green.700' : 'gray.600'}
-        boxShadow="0 1px 2px rgba(15, 23, 42, 0.04)"
+        boxShadow="card"
         _hover={{ bg: active ? 'green.100' : 'gray.50' }}
         _active={{ bg: active ? 'green.100' : 'gray.100' }}
       >
-        <NavIconCart size={18} color={active ? '#15803d' : '#64748b'} />
+        <NavIconCart size={18} color={active ? '#16a34a' : '#64748b'} />
         {itemCount > 0 && (
           <Flex
             position="absolute"

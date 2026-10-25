@@ -16,7 +16,7 @@ import { v4 as uuid } from 'uuid';
 import { CustomerQuickCreateDialog } from '@/components/customers/CustomerQuickCreateDialog';
 import { RateBadgeWithSettings } from '@/components/rate/RateBadgeWithSettings';
 import { GenericInput, GenericSelect, GenericText, MoneyAmountInput, type SelectOption } from '@/components/ui';
-import { FORM_CONTROL_BORDER_RADIUS, formControlFieldHeight } from '@/components/ui/form-control-metrics';
+import { formControlFieldHeight } from '@/components/ui/form-control-metrics';
 import { useCart } from '@/lib/cart/CartContext';
 import { lineTotalUsd } from '@/lib/cart/quantity';
 import { apiFetch } from '@/lib/http/client';
@@ -25,6 +25,11 @@ import { useCustomers, useStoreSettings } from '@/lib/api/hooks';
 import { customerSelectLabel } from '@/lib/customers';
 import { effectiveRate } from '@/lib/rate';
 import { isOnline, queueOutbox } from '@/lib/offline/sync';
+import {
+  outlineIconButtonProps,
+  primarySolidButtonProps,
+  secondarySolidButtonProps,
+} from '@/lib/design/surface-styles';
 
 const payFieldSize = 'sm' as const;
 const payFieldHeight = formControlFieldHeight(payFieldSize);
@@ -271,16 +276,14 @@ export function PayCheckoutDialog({ open, onClose }: Props) {
                         </Box>
                         <IconButton
                           aria-label="Nuevo cliente"
-                          variant="outline"
-                          colorPalette="green"
                           flexShrink={0}
                           h={payFieldHeight}
                           minH={payFieldHeight}
                           maxH={payFieldHeight}
                           w={payFieldHeight}
                           minW={payFieldHeight}
-                          borderRadius={FORM_CONTROL_BORDER_RADIUS}
                           onClick={() => setCreateCustomerOpen(true)}
+                          {...outlineIconButtonProps('secondary')}
                         >
                           <FontAwesomeIcon icon={faPlus} />
                         </IconButton>
@@ -383,13 +386,23 @@ export function PayCheckoutDialog({ open, onClose }: Props) {
                   flex={1}
                   size="lg"
                   minH="12"
-                  colorPalette="blue"
-                  variant="solid"
+                  borderRadius="lg"
+                  variant="outline"
+                  borderColor="gray.200"
+                  color="gray.700"
                   onClick={onClose}
                 >
                   Cerrar
                 </Button>
-                <Button flex={1} size="lg" minH="12" colorPalette="green" loading={loading} onClick={submit}>
+                <Button
+                  flex={1}
+                  size="lg"
+                  minH="12"
+                  variant="solid"
+                  loading={loading}
+                  onClick={submit}
+                  {...primarySolidButtonProps}
+                >
                   Pagar
                 </Button>
               </Dialog.Footer>
@@ -469,12 +482,12 @@ function PayRow({
         <Button
           minW="14"
           px={3}
-          variant="outline"
-          colorPalette="green"
+          variant="solid"
           h={payFieldHeight}
           minH={payFieldHeight}
           maxH={payFieldHeight}
           onClick={onAll}
+          {...secondarySolidButtonProps}
         >
           Todo
         </Button>
@@ -483,12 +496,12 @@ function PayRow({
         <Button
           minW="14"
           px={3}
-          variant="outline"
-          colorPalette="green"
+          variant="solid"
           h={payFieldHeight}
           minH={payFieldHeight}
           maxH={payFieldHeight}
           onClick={onRest}
+          {...secondarySolidButtonProps}
         >
           Resto
         </Button>

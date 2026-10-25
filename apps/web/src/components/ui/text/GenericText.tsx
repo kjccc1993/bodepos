@@ -8,7 +8,7 @@ const variants = {
   label: { fontSize: 'sm', fontWeight: 'medium', color: 'gray.700' },
   error: { fontSize: 'sm', color: 'red.500' },
   strong: { fontSize: 'sm', fontWeight: 'semibold', color: 'gray.900' },
-  price: { fontSize: 'md', fontWeight: 'bold', color: 'gray.900' },
+  price: { fontSize: 'md', fontWeight: 'bold', color: 'brand.600' },
   success: { fontSize: 'xs', fontWeight: 'semibold', color: 'green.700' },
 } as const;
 

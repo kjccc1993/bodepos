@@ -77,15 +77,30 @@ posRouter.get(
     const { storeId } = requireStore(req);
     const rate = await getStoreRate(storeId);
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    const products = await prisma.product.findMany({
-      where: {
-        storeId,
-        isActive: true,
-        ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
-      },
-      orderBy: { name: 'asc' },
+    const where = {
+      storeId,
+      isActive: true,
+      ...(q ? { name: { contains: q, mode: 'insensitive' } } : {}),
+    };
+    const rawLimit = Number(req.query.limit);
+    const rawOffset = Number(req.query.offset);
+    const usePagination = Number.isFinite(rawLimit) || Number.isFinite(rawOffset);
+    if (!usePagination) {
+      const products = await prisma.product.findMany({ where, orderBy: { name: 'asc' } });
+      res.json(products.map(p => serializeProduct(p, rate)));
+      return;
+    }
+    const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 36, 1), 100);
+    const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({ where, orderBy: { name: 'asc' }, take: limit, skip: offset }),
+      prisma.product.count({ where }),
+    ]);
+    res.json({
+      items: products.map(p => serializeProduct(p, rate)),
+      total,
+      hasMore: offset + products.length < total,
     });
-    res.json(products.map(p => serializeProduct(p, rate)));
   }),
 );
 

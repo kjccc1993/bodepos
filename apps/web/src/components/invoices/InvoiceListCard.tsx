@@ -17,8 +17,10 @@ export function InvoiceListCard({ invoice, onOpen }: Props) {
   return (
     <Box
       bg="white"
-      borderRadius="md"
+      borderRadius="xl"
       borderWidth="1px"
+      borderColor="gray.200"
+      boxShadow="soft"
       px={2.5}
       py={2}
       cursor="pointer"
@@ -40,10 +42,22 @@ export function InvoiceListCard({ invoice, onOpen }: Props) {
 
         <Stack align="flex-end" gap={0.5} flexShrink={0} maxW="55%">
           <InvoiceStatusBadge status={invoice.status} />
-          <GenericText variant="strong" fontSize="sm" textAlign="right" lineClamp={1}>
+          <GenericText
+            variant="strong"
+            fontSize="sm"
+            textAlign="right"
+            lineClamp={1}
+            fontVariantNumeric="tabular-nums"
+          >
             {formatUsd(invoice.totalUsd)}
           </GenericText>
-          <GenericText variant="body" fontSize="xs" textAlign="right" lineClamp={1}>
+          <GenericText
+            variant="body"
+            fontSize="xs"
+            textAlign="right"
+            lineClamp={1}
+            fontVariantNumeric="tabular-nums"
+          >
             {formatBs(invoice.totalBs)}
           </GenericText>
           <GenericText variant="caption" textAlign="right">

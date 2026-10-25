@@ -51,6 +51,44 @@ export function NavIconAccounting({ size = 22, color = 'currentColor' }: NavIcon
   );
 }
 
+export function NavIconInvoices({ size = 22, color = 'currentColor' }: NavIconProps) {
+  const s = stroke(color);
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" {...s} />
+      <path d="M14 2v6h6" {...s} />
+      <path d="M8 13h8" {...s} />
+      <path d="M8 17h8" {...s} />
+      <path d="M8 9h2" {...s} />
+    </svg>
+  );
+}
+
+export function NavIconDailyIncomes({ size = 22, color = 'currentColor' }: NavIconProps) {
+  const s = stroke(color);
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path d="M3 3v18h18" {...s} />
+      <path d="M7 16v-4" {...s} />
+      <path d="M11 16V8" {...s} />
+      <path d="M15 16v-6" {...s} />
+      <path d="M19 16V5" {...s} />
+    </svg>
+  );
+}
+
+export function NavIconCustomers({ size = 22, color = 'currentColor' }: NavIconProps) {
+  const s = stroke(color);
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" {...s} />
+      <circle cx="9" cy="7" r="4" {...s} />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" {...s} />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" {...s} />
+    </svg>
+  );
+}
+
 export function NavIconMore({ size = 22, color = 'currentColor' }: NavIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -61,10 +99,18 @@ export function NavIconMore({ size = 22, color = 'currentColor' }: NavIconProps)
   );
 }
 
-export type NavIconId = 'sell' | 'products' | 'cart' | 'accounting' | 'more';
+export type NavIconId =
+  | 'sell'
+  | 'products'
+  | 'cart'
+  | 'accounting'
+  | 'invoices'
+  | 'dailyIncomes'
+  | 'customers'
+  | 'more';
 
 export function NavIcon({ id, active }: { id: NavIconId; active: boolean }) {
-  const color = active ? '#15803d' : '#64748b';
+  const color = active ? '#111827' : '#6B7280';
   const props = { size: 22, color };
   switch (id) {
     case 'sell':
@@ -75,6 +121,12 @@ export function NavIcon({ id, active }: { id: NavIconId; active: boolean }) {
       return <NavIconCart {...props} />;
     case 'accounting':
       return <NavIconAccounting {...props} />;
+    case 'invoices':
+      return <NavIconInvoices {...props} />;
+    case 'dailyIncomes':
+      return <NavIconDailyIncomes {...props} />;
+    case 'customers':
+      return <NavIconCustomers {...props} />;
     default:
       return <NavIconMore {...props} />;
   }

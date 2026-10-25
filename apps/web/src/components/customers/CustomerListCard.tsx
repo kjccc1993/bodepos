@@ -26,10 +26,10 @@ export function CustomerListCard({ customer, onOpen }: Props) {
         }
       }}
       bg="white"
-      borderRadius="lg"
+      borderRadius="xl"
       borderWidth="1px"
       borderColor="gray.200"
-      boxShadow="sm"
+      boxShadow="soft"
       p={{ base: 2, md: 2.5 }}
       cursor="pointer"
       _hover={{ borderColor: 'gray.300', bg: 'gray.50' }}

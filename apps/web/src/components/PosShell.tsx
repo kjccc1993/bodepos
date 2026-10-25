@@ -1,9 +1,14 @@
 import { Badge, Box, Button, Flex, Stack, Text } from '@chakra-ui/react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { startTransition } from 'react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { NavIcon, type NavIconId } from '@/components/nav/NavIcons';
+import { SidebarAccountingNav } from '@/components/nav/SidebarAccountingNav';
+import { SidebarUserBlock } from '@/components/nav/SidebarUserBlock';
+import { isAccountingPath } from '@/lib/nav/accounting-nav';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { useBcvRateSync } from '@/lib/api/hooks';
+import { useBcvRateSync, useCatalogBackgroundSync } from '@/lib/api/hooks';
+import { navItemActiveProps, navItemIdleProps, sidebarChromeProps } from '@/lib/design/surface-styles';
 import { isOnline } from '@/lib/offline/sync';
 import { useEffect, useState } from 'react';
 
@@ -14,10 +19,13 @@ const tabs: { to: string; label: string; mobileLabel: string; icon: NavIconId }[
 ];
 
 function isTabActive(pathname: string, to: string) {
+  if (to === '/accounting') return isAccountingPath(pathname);
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
 function BottomNav({ pathname }: { pathname: string }) {
+  const navigate = useNavigate();
+
   return (
     <Flex
       as="nav"
@@ -30,7 +38,7 @@ function BottomNav({ pathname }: { pathname: string }) {
       bg="white"
       borderTopWidth="1px"
       borderColor="gray.200"
-      boxShadow="none"
+      boxShadow="0 -2px 12px rgba(15, 23, 42, 0.04)"
       zIndex={10}
       px={1}
       pt={1}
@@ -41,11 +49,22 @@ function BottomNav({ pathname }: { pathname: string }) {
       {tabs.map(tab => {
         const active = isTabActive(pathname, tab.to);
         return (
-          <Link
+          <button
             key={tab.to}
-            to={tab.to}
-            style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}
+            type="button"
             aria-current={active ? 'page' : undefined}
+            onClick={() => {
+              if (active) return;
+              startTransition(() => navigate(tab.to));
+            }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              border: 0,
+              background: 'transparent',
+              padding: 0,
+              cursor: 'pointer',
+            }}
           >
             <Flex
               direction="column"
@@ -56,9 +75,9 @@ function BottomNav({ pathname }: { pathname: string }) {
               py={1}
               px={0.5}
               borderRadius="lg"
-              bg={active ? 'green.50' : 'transparent'}
-              color={active ? 'green.700' : 'gray.600'}
-              transition="background 0.15s ease"
+              w="full"
+              {...(active ? navItemActiveProps : navItemIdleProps)}
+              transition="background 0.15s ease, border-color 0.15s ease"
               _active={{ bg: 'gray.100' }}
             >
               <Box lineHeight={0}>
@@ -75,7 +94,7 @@ function BottomNav({ pathname }: { pathname: string }) {
                 {tab.mobileLabel}
               </Text>
             </Flex>
-          </Link>
+          </button>
         );
       })}
     </Flex>
@@ -84,9 +103,17 @@ function BottomNav({ pathname }: { pathname: string }) {
 
 export function PosShell() {
   const loc = useLocation();
+  const isTradeView = loc.pathname === '/sell' || loc.pathname === '/products';
   const { logout } = useAuth();
   const [online, setOnline] = useState(isOnline());
   useBcvRateSync();
+  const [deferHeavySync, setDeferHeavySync] = useState(false);
+  useCatalogBackgroundSync(deferHeavySync);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setDeferHeavySync(true), 1500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     const up = () => setOnline(true);
@@ -106,41 +133,47 @@ export function PosShell() {
         aria-label="Menú principal"
         display={{ base: 'none', lg: 'flex' }}
         flexDirection="column"
-        w="56"
+        w="64"
         flexShrink={0}
-        bg="white"
-        borderRightWidth="1px"
-        borderColor="gray.200"
+        {...sidebarChromeProps}
         position="sticky"
         top={0}
         h="100dvh"
-        py={5}
-        px={3}
+        py={6}
+        px={5}
       >
-        <Box px={1} mb={6}>
+        <Box px={0.5} pb={5} mb={5} borderBottomWidth="1px" borderColor="gray.200">
           <BrandLogo size="sm" />
         </Box>
 
-        <Stack gap={1} flex="1">
+        <Box mb={6}>
+          <SidebarUserBlock />
+        </Box>
+
+        <Stack gap={2.5} flex="1">
           {tabs.map(tab => {
+            if (tab.to === '/accounting') {
+              return <SidebarAccountingNav key={tab.to} pathname={loc.pathname} />;
+            }
             const active = isTabActive(loc.pathname, tab.to);
             return (
               <Link key={tab.to} to={tab.to} style={{ textDecoration: 'none' }}>
                 <Flex
                   align="center"
-                  gap={2}
-                  px={3}
-                  py={2.5}
-                  borderRadius="md"
-                  bg={active ? 'green.50' : 'transparent'}
-                  color={active ? 'green.800' : 'gray.700'}
-                  fontWeight={active ? 'semibold' : 'medium'}
+                  gap={3}
+                  px={4}
+                  py={3}
+                  borderRadius="lg"
                   fontSize="sm"
-                  borderWidth="1px"
-                  borderColor={active ? 'green.200' : 'transparent'}
-                  _hover={{ bg: active ? 'green.50' : 'gray.50' }}
+                  lineHeight="short"
+                  transition="background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease"
+                  {...(active ? navItemActiveProps : navItemIdleProps)}
+                  _hover={{
+                    bg: active ? 'white' : 'blackAlpha.50',
+                    borderColor: active ? 'gray.200' : 'transparent',
+                  }}
                 >
-                  <Box flexShrink={0} lineHeight={0}>
+                  <Box flexShrink={0} lineHeight={0} w="6" display="flex" justifyContent="center">
                     <NavIcon id={tab.icon} active={active} />
                   </Box>
                   {tab.label}
@@ -150,16 +183,29 @@ export function PosShell() {
           })}
         </Stack>
 
-        <Stack gap={2} mt="auto">
+        <Stack gap={2.5} mt="auto" pt={4}>
           {!online && (
-            <Badge colorPalette="orange" size="sm" justifyContent="center" py={1}>
+            <Badge colorPalette="orange" size="sm" justifyContent="center" py={1} borderRadius="md">
               Sin conexión
             </Badge>
           )}
-          <Button variant="ghost" size="sm" color="gray.600" onClick={logout}>
+          <Button
+            variant="outline"
+            size="md"
+            w="full"
+            h="10"
+            borderRadius="lg"
+            borderColor="gray.200"
+            color="gray.700"
+            fontWeight="medium"
+            bg="white"
+            boxShadow="0 1px 2px rgba(15, 23, 42, 0.04)"
+            _hover={{ bg: 'gray.50' }}
+            onClick={logout}
+          >
             Cerrar sesión
           </Button>
-          <Text fontSize="2xs" color="gray.400" px={2}>
+          <Text fontSize="2xs" color="gray.400" px={1} textAlign="center">
             v0.1.0
           </Text>
         </Stack>
@@ -171,7 +217,7 @@ export function PosShell() {
         minW={0}
         minH={0}
         overflow="hidden"
-        bg={{ base: 'white', lg: 'transparent' }}
+        bg={{ base: 'surface.page', lg: 'surface.page' }}
       >
         {!online && (
           <Badge
@@ -192,14 +238,21 @@ export function PosShell() {
           minW={0}
           display="flex"
           flexDirection="column"
-          overflowY="auto"
+          overflowY={isTradeView ? 'hidden' : 'auto'}
           overflowX="hidden"
-          px={{ base: 3, lg: 5 }}
-          pt={{ base: 3, lg: 4 }}
-          pb={{
-            base: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
-            lg: 4,
-          }}
+          px={isTradeView ? 0 : { base: 3, lg: 5 }}
+          pt={isTradeView ? 0 : { base: 3, lg: 4 }}
+          pb={
+            isTradeView
+              ? {
+                  base: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+                  lg: 0,
+                }
+              : {
+                  base: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+                  lg: 4,
+                }
+          }
         >
           <Outlet />
         </Box>

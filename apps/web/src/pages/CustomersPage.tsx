@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { CustomerQuickCreateDialog } from '@/components/customers/CustomerQuickCreateDialog';
 import { CustomerListCard } from '@/components/customers/CustomerListCard';
 import { BackChevronLink } from '@/components/nav/BackChevronLink';
-import { GenericHeading, GenericInput, GenericText } from '@/components/ui';
+import { GenericHeading, GenericSearchInput, GenericText } from '@/components/ui';
 import { useCustomers } from '@/lib/api/hooks';
 
 export function CustomersPage() {
@@ -29,7 +29,7 @@ export function CustomersPage() {
           <GenericHeading flex="1" minW={0}>
             Clientes
           </GenericHeading>
-          <Button size="sm" colorPalette="blue" flexShrink={0} onClick={() => setCreateOpen(true)}>
+          <Button size="sm" colorPalette="green" flexShrink={0} onClick={() => setCreateOpen(true)}>
             Nuevo
           </Button>
         </Flex>
@@ -43,10 +43,10 @@ export function CustomersPage() {
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
-        <GenericInput
+        <GenericSearchInput
           placeholder="Buscar por nombre"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={setSearch}
           size="lg"
           h="12"
           boxShadow="sm"

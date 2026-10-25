@@ -1,11 +1,11 @@
-import { faBoxesStacked, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import { Box, Button, Flex, Grid, Stack } from '@chakra-ui/react';
-import { useId, useState } from 'react';
+import { Box, Button, Flex, Stack } from '@chakra-ui/react';
+import { useCallback, useId, useState } from 'react';
+import { AdminCatalogGrid } from '@/components/products/AdminCatalogGrid';
 import { InventoryAdjustDialog } from '@/components/products/InventoryAdjustDialog';
-import { ProductCardActionIcon } from '@/components/sell/ProductCardActionIcon';
-import { ProductCardShell } from '@/components/sell/ProductCardShell';
-import { FormField, GenericHeading, GenericInput, GenericSelect, GenericText, type SelectOption } from '@/components/ui';
-import { useProducts, useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
+import { FormField, GenericHeading, GenericInput, GenericSearchInput, GenericSelect, GenericText, type SelectOption } from '@/components/ui';
+import { useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
+import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
+import { useQueryClient } from '@tanstack/react-query';
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
 import { apiFetch } from '@/lib/http/client';
@@ -19,11 +19,15 @@ export function ProductsPage() {
   const { data: settings } = useStoreSettings();
   const rate = effectiveRate(settings);
   const [search, setSearch] = useState('');
-  const { data: products = [], refetch } = useProducts(search);
-  const save = useSaveProduct();
+  const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null);
   const [form, setForm] = useState<Partial<Product> | null>(null);
   const [inventoryProduct, setInventoryProduct] = useState<Product | null>(null);
   const [inventoryBusy, setInventoryBusy] = useState(false);
+  const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search);
+  const onEdit = useCallback((p: Product) => setForm(p), []);
+  const onInventory = useCallback((p: Product) => setInventoryProduct(p), []);
+  const save = useSaveProduct();
+  const qc = useQueryClient();
 
   const unitValue = form?.unit ?? 'UNIT';
   const fieldIds = {
@@ -34,21 +38,13 @@ export function ProductsPage() {
   };
 
   return (
-    <Flex
-      direction="column"
-      flex="1"
-      minH={0}
-      h={0}
-      mx={{ base: -3, lg: -5 }}
-      mt={{ base: -3, lg: -4 }}
-      mb={{ base: -3, lg: -4 }}
-    >
+    <Flex direction="column" flex="1" minH={0} h={0} w="full">
       <Box flexShrink={0} px={3} pt={3} pb={2} bg="white" borderBottomWidth="1px" borderColor="gray.200">
         <Flex justify="space-between" align="center" gap={2}>
           <GenericHeading>Mis productos</GenericHeading>
           <Button
             size="sm"
-            colorPalette="blue"
+            colorPalette="green"
             flexShrink={0}
             onClick={() => setForm({ name: '', priceUsd: 1, unit: 'UNIT' })}
           >
@@ -65,57 +61,49 @@ export function ProductsPage() {
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
-        <GenericInput
+        <GenericSearchInput
           placeholder="Buscar por nombre"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={setSearch}
           size="lg"
           h="12"
           boxShadow="sm"
         />
       </Box>
 
-      <Box flex="1" minH={0} h={0} overflowY="auto" overscrollBehavior="contain" px={3} py={3} pb={4}>
-        <Grid
-          templateColumns={{ base: '1fr', md: 'repeat(3, minmax(0, 1fr))' }}
-          gap={{ base: 2, md: 3 }}
-          w="full"
-          alignItems="start"
-        >
-          {products.map(p => (
-            <ProductCardShell
-              key={p.id}
-              product={p}
-              rate={rate}
-              actions={
-                <Flex
-                  flexShrink={0}
-                  h="9"
-                  gap="10px"
-                  align="stretch"
-                  ms="auto"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <ProductCardActionIcon
-                    label="Editar"
-                    icon={faPenToSquare}
-                    colorPalette="blue"
-                    onClick={() => setForm(p)}
-                  />
-                  <ProductCardActionIcon
-                    label="Inventario"
-                    icon={faBoxesStacked}
-                    colorPalette="green"
-                    onClick={() => setInventoryProduct(p)}
-                  />
-                </Flex>
-              }
-            />
-          ))}
-        </Grid>
-        {products.length === 0 && (
+      <Box
+        ref={setScrollRoot}
+        data-product-scroll-root
+        flex="1"
+        minH={0}
+        h={0}
+        overflowY="auto"
+        overscrollBehavior="contain"
+        px={3}
+        py={3}
+        pb={4}
+      >
+        <AdminCatalogGrid
+          products={products}
+          rate={rate}
+          scrollRoot={scrollRoot}
+          onEdit={onEdit}
+          onInventory={onInventory}
+        />
+        {isLoading && (
+          <GenericText variant="muted" textAlign="center" py={6}>
+            Cargando productos…
+          </GenericText>
+        )}
+        {!isLoading && products.length === 0 && (
           <GenericText variant="muted" textAlign="center" py={8}>
             No hay productos. Prueba otra búsqueda o crea uno nuevo.
+          </GenericText>
+        )}
+        <Box ref={sentinelRef} h="1" w="full" aria-hidden />
+        {isFetchingNextPage && (
+          <GenericText variant="caption" textAlign="center" py={3}>
+            Cargando más…
           </GenericText>
         )}
       </Box>
@@ -139,7 +127,8 @@ export function ProductsPage() {
                 type: qtyDelta > 0 ? 'PURCHASE' : 'ADJUSTMENT',
               }),
             });
-            void refetch();
+            void qc.invalidateQueries({ queryKey: ['products-infinite'] });
+            void qc.invalidateQueries({ queryKey: ['product-stock-map'] });
           } finally {
             setInventoryBusy(false);
           }

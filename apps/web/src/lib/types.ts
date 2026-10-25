@@ -11,6 +11,12 @@ export type Product = {
   isActive: boolean;
 };
 
+export type ProductsListPage = {
+  items: Product[];
+  total: number;
+  hasMore: boolean;
+};
+
 export type Customer = {
   id: string;
   name: string;

@@ -6,7 +6,7 @@ export const FORM_CONTROL_HEIGHT = {
   xl: '48px',
 } as const;
 
-export const FORM_CONTROL_BORDER_RADIUS = 'md' as const;
+export const FORM_CONTROL_BORDER_RADIUS = 'lg' as const;
 
 export type FormControlSize = keyof typeof FORM_CONTROL_HEIGHT;
 

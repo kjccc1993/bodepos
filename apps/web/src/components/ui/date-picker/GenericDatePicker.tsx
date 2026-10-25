@@ -257,12 +257,12 @@ export function GenericDatePicker(props: GenericDatePickerProps) {
             justifyContent="flex-start"
             textAlign="start"
             fontWeight="normal"
-            borderRadius="md"
+            borderRadius="lg"
             aria-label={ariaLabel}
             _focusVisible={{
               ring: 2,
-              ringColor: 'green.200',
-              borderColor: invalid ? 'red.500' : 'green.500',
+              ringColor: 'brand.100',
+              borderColor: invalid ? 'red.500' : 'brand.500',
             }}
             disabled={disabled}
             {...resolveDisabledFieldTriggerProps({ disabled, invalid })}

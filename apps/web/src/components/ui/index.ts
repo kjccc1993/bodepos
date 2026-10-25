@@ -1,5 +1,6 @@
 export { FormField, type FormFieldProps } from '@/components/ui/form/FormField';
 export { GenericInput, type GenericInputProps } from '@/components/ui/input/GenericInput';
+export { GenericSearchInput, type GenericSearchInputProps } from '@/components/ui/input/GenericSearchInput';
 export { GenericDatePicker, type GenericDatePickerProps, type DateRangeFormValue } from '@/components/ui/date-picker/GenericDatePicker';
 export { MoneyAmountInput } from '@/components/ui/input/MoneyAmountInput';
 export { GenericSelect, type SelectOption } from '@/components/ui/select/GenericSelect';
