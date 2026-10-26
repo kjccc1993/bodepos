@@ -122,6 +122,7 @@ posRouter.get(
 const productBody = z.object({
   name: z.string().min(1),
   priceUsd: z.number().positive(),
+  costUsd: z.number().min(0).optional(),
   unit: z.nativeEnum(ProductUnit),
   stock: z.number().optional(),
   barcode: z.string().nullable().optional(),

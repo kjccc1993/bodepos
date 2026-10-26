@@ -27,6 +27,7 @@ export function serializeProduct(p: Product, rate: number) {
     name: p.name,
     priceUsd,
     priceBs: Math.round(priceUsd * rate * 100) / 100,
+    costUsd: toNumber(p.costUsd),
     unit: p.unit,
     stock: toNumber(p.stock),
     barcode: p.barcode,

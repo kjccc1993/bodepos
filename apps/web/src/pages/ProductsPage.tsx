@@ -33,6 +33,7 @@ export function ProductsPage() {
   const fieldIds = {
     name: useId(),
     price: useId(),
+    cost: useId(),
     barcode: useId(),
     unit: useId(),
   };
@@ -46,7 +47,7 @@ export function ProductsPage() {
             size="sm"
             colorPalette="green"
             flexShrink={0}
-            onClick={() => setForm({ name: '', priceUsd: 1, unit: 'UNIT' })}
+            onClick={() => setForm({ name: '', priceUsd: 1, costUsd: 0, unit: 'UNIT' })}
           >
             Nuevo
           </Button>
@@ -158,7 +159,15 @@ export function ProductsPage() {
                   onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </FormField>
-              <FormField label="Precio USD" htmlFor={fieldIds.price}>
+              <FormField label="Costo USD" htmlFor={fieldIds.cost}>
+                <GenericInput
+                  id={fieldIds.cost}
+                  decimal
+                  value={form.costUsd ?? ''}
+                  onChange={e => setForm({ ...form, costUsd: Number(e.target.value.replace(',', '.')) })}
+                />
+              </FormField>
+              <FormField label="Precio venta USD" htmlFor={fieldIds.price}>
                 <GenericInput
                   id={fieldIds.price}
                   decimal
@@ -194,6 +203,7 @@ export function ProductsPage() {
                       id: form.id,
                       name: form.name!,
                       priceUsd: Number(form.priceUsd),
+                      costUsd: Number(form.costUsd ?? 0),
                       unit: (form.unit ?? 'UNIT') as ProductUnit,
                       barcode: form.barcode ?? null,
                     });

@@ -1,0 +1,2 @@
+ALTER TABLE "bodepos"."products"
+ADD COLUMN IF NOT EXISTS "cost_usd" DECIMAL(18, 4) NOT NULL DEFAULT 0;

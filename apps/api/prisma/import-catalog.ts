@@ -38,6 +38,7 @@ async function replaceStoreCatalog(storeId: string, items: LegacyCatalogItem[]) 
     storeId,
     name: item.name.trim(),
     priceUsd: item.priceToSellUsd,
+    costUsd: 0,
     unit: mapLegacyUnit(item.unit),
     stock: mapLegacyStock(item.unit, item.inStock ?? 0),
     barcode: null as string | null,

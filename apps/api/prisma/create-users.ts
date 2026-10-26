@@ -4,13 +4,23 @@ import { normalizeUsername } from '../src/shared/username.js';
 
 const prisma = new PrismaClient();
 
-type UserSpec = { username: string; password: string; role?: string };
+/** Formato: `usuario:contraseña,usuario2:contraseña2` en CREATE_USERS */
+function parseUserSpecs(): { username: string; password: string; role?: string }[] {
+  const raw = process.env.CREATE_USERS?.trim();
+  if (!raw) {
+    throw new Error('Define CREATE_USERS (ej. kevin.camargo:secret,edgar.camargo:secret)');
+  }
+  return raw.split(',').map(part => {
+    const [username, password] = part.split(':');
+    if (!username?.trim() || !password) {
+      throw new Error(`Entrada inválida en CREATE_USERS: ${part}`);
+    }
+    return { username: username.trim(), password };
+  });
+}
 
 async function main() {
-  const specs: UserSpec[] = [
-    { username: 'kevin.camargo', password: 'Zenaida.10' },
-    { username: 'edgar.camargo', password: 'Zenaida.10' },
-  ];
+  const specs = parseUserSpecs();
 
   const store = await prisma.store.findFirst();
   if (!store) {

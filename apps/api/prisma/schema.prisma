@@ -73,6 +73,7 @@ model Product {
   storeId            String      @map("store_id") @db.Uuid
   name               String      @db.Text
   priceUsd           Decimal     @map("price_usd") @db.Decimal(18, 4)
+  costUsd            Decimal     @default(0) @map("cost_usd") @db.Decimal(18, 4)
   unit               ProductUnit @default(UNIT)
   stock              Decimal     @default(0) @db.Decimal(18, 4)
   barcode            String?     @db.Text

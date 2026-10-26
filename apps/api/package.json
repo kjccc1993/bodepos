@@ -15,6 +15,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:create-users": "tsx prisma/create-users.ts",
     "prisma:import-catalog": "tsx prisma/import-catalog.ts",
+    "prisma:import-merchant-catalog": "tsx prisma/import-merchant-catalog.ts",
+    "prisma:sync-products-prod": "tsx prisma/sync-products-to-prod.ts",
     "predev": "prisma generate",
     "dev": "nodemon",
     "lint": "tsc -p tsconfig.json --noEmit",

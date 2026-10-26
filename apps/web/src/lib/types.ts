@@ -5,6 +5,7 @@ export type Product = {
   name: string;
   priceUsd: number;
   priceBs: number;
+  costUsd: number;
   unit: ProductUnit;
   stock: number;
   barcode: string | null;
