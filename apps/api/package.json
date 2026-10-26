@@ -17,6 +17,7 @@
     "prisma:import-catalog": "tsx prisma/import-catalog.ts",
     "prisma:import-merchant-catalog": "tsx prisma/import-merchant-catalog.ts",
     "prisma:sync-products-prod": "tsx prisma/sync-products-to-prod.ts",
+    "prisma:assign-categories": "tsx prisma/assign-product-categories.ts",
     "predev": "prisma generate",
     "dev": "nodemon",
     "lint": "tsc -p tsconfig.json --noEmit",

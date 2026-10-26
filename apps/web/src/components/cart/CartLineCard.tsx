@@ -18,6 +18,8 @@ export function cartLineAsProduct(line: CartLine, rate: number, stock: number): 
     stock,
     barcode: null,
     isActive: true,
+    categoryId: null,
+    category: null,
   };
 }
 

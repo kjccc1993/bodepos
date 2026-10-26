@@ -20,6 +20,7 @@ model Store {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   users            User[]
+  productCategories ProductCategory[]
   products         Product[]
   customers        Customer[]
   invoices         Invoice[]
@@ -68,9 +69,27 @@ enum ProductUnit {
   @@schema("bodepos")
 }
 
+model ProductCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  name      String   @db.Text
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([storeId, name])
+  @@index([storeId, sortOrder])
+  @@map("product_categories")
+  @@schema("bodepos")
+}
+
 model Product {
   id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   storeId            String      @map("store_id") @db.Uuid
+  categoryId         String?     @map("category_id") @db.Uuid
   name               String      @db.Text
   priceUsd           Decimal     @map("price_usd") @db.Decimal(18, 4)
   costUsd            Decimal     @default(0) @map("cost_usd") @db.Decimal(18, 4)
@@ -84,11 +103,13 @@ model Product {
   updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   store          Store               @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  category       ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   invoiceLines   InvoiceLine[]
   inventoryMoves InventoryMovement[]
 
   @@unique([storeId, barcode])
   @@index([storeId, name])
+  @@index([storeId, categoryId])
   @@map("products")
   @@schema("bodepos")
 }

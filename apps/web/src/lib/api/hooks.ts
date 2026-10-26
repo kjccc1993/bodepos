@@ -7,6 +7,7 @@ import type {
   Invoice,
   InvoiceSummary,
   Product,
+  ProductCategory,
   StoreSettings,
 } from '@/lib/types';
 import { fetchAllProductsForCache } from '@/lib/api/products-page';
@@ -18,6 +19,14 @@ export function useStoreSettings() {
   return useQuery({
     queryKey: ['store-settings'],
     queryFn: () => apiFetch<StoreSettings>('/store-settings'),
+  });
+}
+
+export function useProductCategories() {
+  return useQuery({
+    queryKey: ['product-categories'],
+    queryFn: () => apiFetch<ProductCategory[]>('/product-categories'),
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -150,6 +159,7 @@ export function useSaveProduct() {
       qc.invalidateQueries({ queryKey: ['products-infinite'] });
       qc.invalidateQueries({ queryKey: ['catalog-background-sync'] });
       qc.invalidateQueries({ queryKey: ['product-stock-map'] });
+      qc.invalidateQueries({ queryKey: ['product-categories'] });
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GenericInput, type GenericInputProps } from '@/components/ui/input/GenericInput';
 import { formatMoneyDraft, formatMoneyInput, parseMoneyAmount } from '@/lib/money';
-import { sanitizeDecimalInput } from '@/lib/utils/numeric-input';
+import { isIncompleteDecimalDraft, sanitizeDecimalInput } from '@/lib/utils/numeric-input';
 
 type Props = Omit<GenericInputProps, 'value' | 'onChange' | 'decimal'> & {
   value: number;
@@ -26,7 +26,11 @@ export function MoneyAmountInput({ value, onChange, onBlur, onFocus, ...props }:
         setDraft(value ? formatMoneyDraft(value) : '');
         onFocus?.(e);
       }}
-      onChange={e => setDraft(sanitizeDecimalInput(e.target.value))}
+      onChange={e => {
+        const next = sanitizeDecimalInput(e.target.value);
+        setDraft(next);
+        if (!isIncompleteDecimalDraft(next)) onChange(parseMoneyAmount(next));
+      }}
       onBlur={e => {
         onChange(parseMoneyAmount(draft ?? e.target.value));
         setDraft(null);

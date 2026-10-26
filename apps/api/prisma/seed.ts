@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
+import { ensureStoreCategories } from './ensure-store-categories.js';
 
 const prisma = new PrismaClient();
 
@@ -28,8 +29,11 @@ async function main() {
     update: { passwordHash, isActive: true },
   });
 
+  await ensureStoreCategories(prisma, store.id);
+
   console.log('Seed OK — admin / admin123');
   console.log('Catálogo: yarn prisma:import-catalog');
+  console.log('Asignar rubros: yarn prisma:assign-categories');
 }
 
 main()

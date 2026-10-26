@@ -20,6 +20,9 @@ type GenericSelectProps = {
   disabled?: boolean;
   size?: FormControlSize;
   'aria-label'?: string;
+  /** Ancho mínimo del menú (útil cuando el trigger es estrecho). */
+  menuMinWidth?: string;
+  menuPlacement?: 'bottom-start' | 'bottom-end';
 };
 
 export function GenericSelect({
@@ -32,6 +35,8 @@ export function GenericSelect({
   disabled = false,
   size = 'md',
   'aria-label': ariaLabel,
+  menuMinWidth,
+  menuPlacement = 'bottom-start',
 }: GenericSelectProps) {
   const collection = useMemo(() => createListCollection({ items: options }), [options]);
   const hasValue = value != null && value.length > 0;
@@ -83,29 +88,34 @@ export function GenericSelect({
         </Select.IndicatorGroup>
       </Select.Control>
       <Portal>
-        <Select.Positioner zIndex={50}>
+        <Select.Positioner zIndex={50} position={menuPlacement}>
           <Select.Content
-          bg="white"
-          borderWidth="1px"
-          borderColor="gray.200"
-          borderRadius={FORM_CONTROL_BORDER_RADIUS}
-          shadow="md"
-          maxH="min(320px, 50dvh)"
-        >
-          {options.map(item => (
-            <Select.Item
-              item={item}
-              key={item.value}
-              py={2.5}
-              px={3}
-              minH={{ base: 'touch', lg: undefined }}
-              cursor="pointer"
-              _hover={{ bg: 'gray.50' }}
-            >
-              {item.label}
-              <Select.ItemIndicator />
-            </Select.Item>
-          ))}
+            bg="white"
+            borderWidth="1px"
+            borderColor="gray.200"
+            borderRadius={FORM_CONTROL_BORDER_RADIUS}
+            shadow="md"
+            maxH="min(320px, 50dvh)"
+            minW={menuMinWidth ?? 'var(--reference-width)'}
+            w={menuMinWidth ? 'max-content' : undefined}
+            maxW={menuMinWidth ? 'min(20rem, calc(100dvw - 1rem))' : undefined}
+            overflowX="hidden"
+          >
+            {options.map(item => (
+              <Select.Item
+                item={item}
+                key={item.value}
+                py={2.5}
+                px={3}
+                minH={{ base: 'touch', lg: undefined }}
+                cursor="pointer"
+                whiteSpace={menuMinWidth ? 'nowrap' : undefined}
+                _hover={{ bg: 'gray.50' }}
+              >
+                {item.label}
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
           </Select.Content>
         </Select.Positioner>
       </Portal>

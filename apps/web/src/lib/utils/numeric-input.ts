@@ -19,3 +19,9 @@ export const sanitizeDecimalInput = (value: string): string => {
 
   return result;
 };
+
+/** Entrada decimal aún en curso (termina en `.` o `,` sin dígitos después). */
+export function isIncompleteDecimalDraft(value: string): boolean {
+  const trimmed = value.trim();
+  return trimmed.endsWith('.') || trimmed.endsWith(',');
+}

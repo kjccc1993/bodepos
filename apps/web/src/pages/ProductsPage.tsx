@@ -2,8 +2,9 @@ import { Box, Button, Flex, Stack } from '@chakra-ui/react';
 import { useCallback, useId, useState } from 'react';
 import { AdminCatalogGrid } from '@/components/products/AdminCatalogGrid';
 import { InventoryAdjustDialog } from '@/components/products/InventoryAdjustDialog';
-import { FormField, GenericHeading, GenericInput, GenericSearchInput, GenericSelect, GenericText, type SelectOption } from '@/components/ui';
-import { useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
+import { ProductSearchWithCategory } from '@/components/products/ProductSearchWithCategory';
+import { FormField, GenericHeading, GenericInput, GenericSelect, GenericText, MoneyAmountInput, type SelectOption } from '@/components/ui';
+import { useProductCategories, useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
 import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatProfitMarkupPercent, profitMarkupPercent } from '@/lib/money';
@@ -20,11 +21,13 @@ export function ProductsPage() {
   const { data: settings } = useStoreSettings();
   const rate = effectiveRate(settings);
   const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const { data: categories = [] } = useProductCategories();
   const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null);
   const [form, setForm] = useState<Partial<Product> | null>(null);
   const [inventoryProduct, setInventoryProduct] = useState<Product | null>(null);
   const [inventoryBusy, setInventoryBusy] = useState(false);
-  const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search);
+  const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search, categoryId);
   const onEdit = useCallback((p: Product) => setForm(p), []);
   const onInventory = useCallback((p: Product) => setInventoryProduct(p), []);
   const save = useSaveProduct();
@@ -40,7 +43,10 @@ export function ProductsPage() {
     cost: useId(),
     barcode: useId(),
     unit: useId(),
+    category: useId(),
   };
+
+  const defaultCategoryId = categories.find(c => c.name === 'Despensa')?.id ?? categories[0]?.id ?? null;
 
   return (
     <Flex direction="column" flex="1" minH={0} h={0} w="full">
@@ -51,7 +57,15 @@ export function ProductsPage() {
             size="sm"
             colorPalette="green"
             flexShrink={0}
-            onClick={() => setForm({ name: '', priceUsd: 1, costUsd: 0, unit: 'UNIT' })}
+            onClick={() =>
+              setForm({
+                name: '',
+                priceUsd: 1,
+                costUsd: 0,
+                unit: 'UNIT',
+                categoryId: defaultCategoryId,
+              })
+            }
           >
             Nuevo
           </Button>
@@ -66,13 +80,14 @@ export function ProductsPage() {
         borderBottomWidth="1px"
         borderColor="gray.200"
       >
-        <GenericSearchInput
-          placeholder="Buscar por nombre"
-          value={search}
-          onChange={setSearch}
-          size="lg"
-          h="12"
-          boxShadow="sm"
+        <ProductSearchWithCategory
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por nombre"
+          categoryId={categoryId}
+          onCategoryChange={setCategoryId}
+          categories={categories}
+          searchBoxShadow="sm"
         />
       </Box>
 
@@ -156,6 +171,15 @@ export function ProductsPage() {
               <GenericHeading variant="section">
                 {form.id ? 'Editar' : 'Nuevo'} producto
               </GenericHeading>
+              <FormField label="Categoría" htmlFor={fieldIds.category}>
+                <GenericSelect
+                  options={categories.map(c => ({ value: c.id, label: c.name }))}
+                  value={form.categoryId ?? ''}
+                  onChange={v => setForm({ ...form, categoryId: v || null })}
+                  name={fieldIds.category}
+                  aria-label="Categoría"
+                />
+              </FormField>
               <FormField label="Nombre" htmlFor={fieldIds.name}>
                 <GenericInput
                   id={fieldIds.name}
@@ -164,19 +188,17 @@ export function ProductsPage() {
                 />
               </FormField>
               <FormField label="Costo USD" htmlFor={fieldIds.cost}>
-                <GenericInput
+                <MoneyAmountInput
                   id={fieldIds.cost}
-                  decimal
-                  value={form.costUsd ?? ''}
-                  onChange={e => setForm({ ...form, costUsd: Number(e.target.value.replace(',', '.')) })}
+                  value={Number(form.costUsd ?? 0)}
+                  onChange={costUsd => setForm({ ...form, costUsd })}
                 />
               </FormField>
               <FormField label="Precio venta USD" htmlFor={fieldIds.price}>
-                <GenericInput
+                <MoneyAmountInput
                   id={fieldIds.price}
-                  decimal
-                  value={form.priceUsd ?? ''}
-                  onChange={e => setForm({ ...form, priceUsd: Number(e.target.value.replace(',', '.')) })}
+                  value={Number(form.priceUsd ?? 0)}
+                  onChange={priceUsd => setForm({ ...form, priceUsd })}
                 />
               </FormField>
               <Box px={0.5}>
@@ -219,6 +241,7 @@ export function ProductsPage() {
                       costUsd: Number(form.costUsd ?? 0),
                       unit: (form.unit ?? 'UNIT') as ProductUnit,
                       barcode: form.barcode ?? null,
+                      categoryId: form.categoryId ?? null,
                     });
                     setForm(null);
                   }}

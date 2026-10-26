@@ -4,9 +4,10 @@ import { SellInvoicePanel } from '@/components/cart/SellInvoicePanel';
 import { ClientSlotButtons } from '@/components/sell/ClientSlotButtons';
 import { PosClientHeader } from '@/components/sell/PosClientHeader';
 import { SellCatalogGrid } from '@/components/sell/SellCatalogGrid';
-import { GenericSearchInput, GenericText } from '@/components/ui';
+import { ProductSearchWithCategory } from '@/components/products/ProductSearchWithCategory';
+import { GenericText } from '@/components/ui';
 import { sellWorkspacePanelProps } from '@/lib/design/surface-styles';
-import { useProductStockMap, useStoreSettings } from '@/lib/api/hooks';
+import { useProductCategories, useProductStockMap, useStoreSettings } from '@/lib/api/hooks';
 import { useBarcodeScanner } from '@/lib/barcode/useBarcodeScanner';
 import { parseQuantityInput } from '@/lib/cart/quantity';
 import { useCart } from '@/lib/cart/CartContext';
@@ -20,8 +21,10 @@ export function SellPage() {
   const { data: settings } = useStoreSettings();
   const rate = effectiveRate(settings);
   const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const { data: categories = [] } = useProductCategories();
   const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null);
-  const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search);
+  const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search, categoryId);
   const { data: stockById = new Map<string, number>() } = useProductStockMap();
   const { activeSlot, setActiveSlot, lines, setProductQuantity, itemCount } = useCart();
   const sellTabActive = useSellTabActive();
@@ -106,13 +109,14 @@ export function SellPage() {
             <Box display={{ base: 'block', md: 'none' }} mb={2}>
               <ClientSlotButtons activeSlot={activeSlot} onSlotChange={setActiveSlot} />
             </Box>
-            <GenericSearchInput
-              placeholder="Buscar o escanear código"
-              value={search}
-              onChange={setSearch}
-              size="lg"
-              h="12"
-              boxShadow="card"
+            <ProductSearchWithCategory
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Buscar o escanear código"
+              categoryId={categoryId}
+              onCategoryChange={setCategoryId}
+              categories={categories}
+              searchBoxShadow="card"
             />
           </Box>
 

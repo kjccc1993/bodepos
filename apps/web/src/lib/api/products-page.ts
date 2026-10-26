@@ -4,27 +4,31 @@ import type { Product, ProductsListPage } from '@/lib/types';
 
 export const PRODUCT_PAGE_SIZE = 24;
 
-function filterCachedBySearch(products: Product[], search: string) {
+function filterCachedProducts(products: Product[], search: string, categoryId: string) {
+  let list = products;
+  if (categoryId) list = list.filter(p => p.categoryId === categoryId);
   const q = search.trim().toLowerCase();
-  if (!q) return products;
-  return products.filter(p => p.name.toLowerCase().includes(q));
+  if (!q) return list;
+  return list.filter(p => p.name.toLowerCase().includes(q));
 }
 
 export async function fetchProductsPage(
   search: string,
   offset: number,
   limit = PRODUCT_PAGE_SIZE,
+  categoryId = '',
 ): Promise<ProductsListPage> {
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   params.set('offset', String(offset));
   const q = search.trim();
   if (q) params.set('q', q);
+  if (categoryId) params.set('categoryId', categoryId);
 
   try {
     return await apiFetch<ProductsListPage>(`/products?${params.toString()}`);
   } catch {
-    const all = filterCachedBySearch(await getCachedProducts(), search);
+    const all = filterCachedProducts(await getCachedProducts(), search, categoryId);
     const items = all.slice(offset, offset + limit);
     return {
       items,

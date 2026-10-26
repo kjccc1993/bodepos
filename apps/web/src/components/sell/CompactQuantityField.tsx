@@ -1,5 +1,7 @@
 import { Button, Flex, Stack } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 import { GenericInput, GenericText } from '@/components/ui';
+import { isIncompleteDecimalDraft } from '@/lib/utils/numeric-input';
 import { productCardActionsWidth } from '@/components/sell/ProductCardShell';
 import { quantityPlaceholder, quantityStepperLabel } from '@/lib/cart/quantity';
 import type { ProductUnit } from '@/lib/types';
@@ -24,6 +26,19 @@ export function CompactQuantityField({
 }: CompactQuantityFieldProps) {
   const integer = unit === 'UNIT';
   const decimal = unit !== 'UNIT';
+  const [draft, setDraft] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft(null);
+  }, [quantity]);
+
+  const displayed =
+    draft ?? (inCart ? String(quantity).replace('.', ',') : '');
+
+  const commitDraft = (raw: string) => {
+    setDraft(null);
+    onQuantityChange(raw);
+  };
 
   return (
     <Stack
@@ -87,10 +102,18 @@ export function CompactQuantityField({
           fontSize="sm"
           _focusVisible={{ outline: 'none', boxShadow: 'none', bg: 'gray.50' }}
           placeholder={quantityPlaceholder(unit)}
-          value={inCart ? String(quantity) : ''}
-          onChange={e => onQuantityChange(e.target.value)}
+          value={displayed}
+          onFocus={() => {
+            if (inCart) setDraft(String(quantity).replace('.', ','));
+          }}
+          onChange={e => {
+            const next = e.target.value;
+            setDraft(next);
+            if (!decimal || !isIncompleteDecimalDraft(next)) onQuantityChange(next);
+          }}
           onBlur={e => {
-            if (e.target.value.trim() === '') onQuantityChange('');
+            if (draft != null) commitDraft(e.target.value);
+            else if (e.target.value.trim() === '') onQuantityChange('');
           }}
         />
 

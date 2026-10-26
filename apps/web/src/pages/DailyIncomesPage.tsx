@@ -1,7 +1,7 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
 import { useState } from 'react';
 import { BackChevronLink } from '@/components/nav/BackChevronLink';
-import { GenericDatePicker, GenericHeading, GenericInput, GenericText } from '@/components/ui';
+import { GenericDatePicker, GenericHeading, GenericText, MoneyAmountInput } from '@/components/ui';
 import { apiFetch } from '@/lib/http/client';
 import { useDailyIncomes } from '@/lib/api/hooks';
 
@@ -88,12 +88,7 @@ function Field({ label, value, onChange }: { label: string; value: number; onCha
       <GenericText variant="label" w="32">
         {label}
       </GenericText>
-      <GenericInput
-        decimal
-        flex="1"
-        value={value || ''}
-        onChange={e => onChange(Number(e.target.value.replace(',', '.')) || 0)}
-      />
+      <MoneyAmountInput flex="1" value={value} onChange={onChange} />
     </Flex>
   );
 }

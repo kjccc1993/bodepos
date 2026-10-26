@@ -25,12 +25,12 @@ export function prefetchDefaultProductLists(qc: QueryClient) {
   });
 }
 
-export function useInfiniteProductList(search: string) {
+export function useInfiniteProductList(search: string, categoryId = '') {
   const debouncedSearch = useDebouncedValue(search);
 
   const query = useInfiniteQuery({
-    queryKey: ['products-infinite', debouncedSearch],
-    queryFn: ({ pageParam }) => fetchProductsPage(debouncedSearch, pageParam),
+    queryKey: ['products-infinite', debouncedSearch, categoryId],
+    queryFn: ({ pageParam }) => fetchProductsPage(debouncedSearch, pageParam, PRODUCT_PAGE_SIZE, categoryId),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.hasMore) return undefined;

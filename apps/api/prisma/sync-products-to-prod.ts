@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { ensureStoreCategories } from './ensure-store-categories.js';
 
 const sourceUrl = process.env.DATABASE_URL;
 const targetUrl = process.env.SYNC_TARGET_DATABASE_URL?.trim();
@@ -18,29 +19,41 @@ async function main() {
   if (!srcStore) throw new Error('Sin tienda en origen');
   if (!tgtStore) throw new Error('Sin tienda en destino');
 
-  const products = await source.product.findMany({
-    where: { storeId: srcStore.id },
-    orderBy: { name: 'asc' },
-  });
+  const [products, srcCategories] = await Promise.all([
+    source.product.findMany({
+      where: { storeId: srcStore.id },
+      orderBy: { name: 'asc' },
+      include: { category: true },
+    }),
+    source.productCategory.findMany({ where: { storeId: srcStore.id } }),
+  ]);
 
   if (products.length === 0) throw new Error('Origen sin productos');
+
+  const tgtCategoryByName = await ensureStoreCategories(target, tgtStore.id);
+  const srcCategoryNameById = new Map(srcCategories.map(c => [c.id, c.name]));
 
   await target.$transaction(async tx => {
     await tx.inventoryMovement.deleteMany({ where: { storeId: tgtStore.id } });
     await tx.product.deleteMany({ where: { storeId: tgtStore.id } });
     await tx.product.createMany({
-      data: products.map(p => ({
-        storeId: tgtStore.id,
-        name: p.name,
-        priceUsd: p.priceUsd,
-        costUsd: p.costUsd,
-        unit: p.unit,
-        stock: p.stock,
-        barcode: p.barcode,
-        lowStockThreshold: p.lowStockThreshold,
-        isActive: p.isActive,
-        colorTag: p.colorTag,
-      })),
+      data: products.map(p => {
+        const catName = p.categoryId ? srcCategoryNameById.get(p.categoryId) : p.category?.name;
+        const categoryId = catName ? tgtCategoryByName.get(catName) ?? null : null;
+        return {
+          storeId: tgtStore.id,
+          name: p.name,
+          priceUsd: p.priceUsd,
+          costUsd: p.costUsd,
+          unit: p.unit,
+          stock: p.stock,
+          barcode: p.barcode,
+          lowStockThreshold: p.lowStockThreshold,
+          isActive: p.isActive,
+          colorTag: p.colorTag,
+          categoryId,
+        };
+      }),
     });
   });
 

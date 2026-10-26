@@ -1,4 +1,5 @@
-import type { Customer, DailyIncome, Invoice, InvoiceLine, Product, Store } from '@prisma/client';
+import type { Customer, DailyIncome, Invoice, InvoiceLine, ProductCategory, Store } from '@prisma/client';
+import type { ProductWithCategory } from './product-include.js';
 import { isManualRateActiveToday } from './exchange-rates/rate-day.js';
 import { resolveEffectiveRate, type RateSource } from './exchange-rates/service.js';
 import { toNumber } from '../shared/money.js';
@@ -20,7 +21,16 @@ export function serializeStore(store: Store) {
   };
 }
 
-export function serializeProduct(p: Product, rate: number) {
+export function serializeProductCategory(c: ProductCategory | null) {
+  if (!c || !c.isActive) return null;
+  return {
+    id: c.id,
+    name: c.name,
+    sortOrder: c.sortOrder,
+  };
+}
+
+export function serializeProduct(p: ProductWithCategory, rate: number) {
   const priceUsd = toNumber(p.priceUsd);
   return {
     id: p.id,
@@ -34,6 +44,8 @@ export function serializeProduct(p: Product, rate: number) {
     lowStockThreshold: p.lowStockThreshold ? toNumber(p.lowStockThreshold) : null,
     isActive: p.isActive,
     colorTag: p.colorTag,
+    categoryId: p.categoryId,
+    category: serializeProductCategory(p.category),
   };
 }
 

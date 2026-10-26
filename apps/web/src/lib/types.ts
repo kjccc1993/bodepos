@@ -1,5 +1,12 @@
 export type ProductUnit = 'UNIT' | 'GRAM';
 
+export type ProductCategory = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  productCount?: number;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -10,6 +17,8 @@ export type Product = {
   stock: number;
   barcode: string | null;
   isActive: boolean;
+  categoryId: string | null;
+  category: Pick<ProductCategory, 'id' | 'name' | 'sortOrder'> | null;
 };
 
 export type ProductsListPage = {

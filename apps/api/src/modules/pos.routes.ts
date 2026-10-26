@@ -17,14 +17,29 @@ import {
   serializeDailyIncome,
   serializeInvoice,
   serializeProduct,
+  serializeProductCategory,
   serializeStore,
 } from './serialize.js';
+import { productWithCategoryArgs } from './product-include.js';
 
 export const posRouter = Router();
 posRouter.use(authRequired);
 
 async function getStoreRate(storeId: string): Promise<number> {
   return resolveEffectiveRateForStore(storeId);
+}
+
+async function resolveProductCategoryId(
+  storeId: string,
+  categoryId: string | null | undefined,
+): Promise<string | null | undefined> {
+  if (categoryId === undefined) return undefined;
+  if (categoryId === null) return null;
+  const cat = await prisma.productCategory.findFirst({
+    where: { id: categoryId, storeId, isActive: true },
+  });
+  if (!cat) throw new AppError(422, 'VALIDATION_ERROR', 'Categoría inválida');
+  return categoryId;
 }
 
 posRouter.post(
@@ -72,11 +87,35 @@ posRouter.patch(
 );
 
 posRouter.get(
+  '/product-categories',
+  asyncHandler(async (req, res) => {
+    const { storeId } = requireStore(req);
+    const categories = await prisma.productCategory.findMany({
+      where: { storeId, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    const counts = await prisma.product.groupBy({
+      by: ['categoryId'],
+      where: { storeId, isActive: true, categoryId: { not: null } },
+      _count: { _all: true },
+    });
+    const countById = new Map(counts.map(c => [c.categoryId!, c._count._all]));
+    res.json(
+      categories.map(c => ({
+        ...serializeProductCategory(c)!,
+        productCount: countById.get(c.id) ?? 0,
+      })),
+    );
+  }),
+);
+
+posRouter.get(
   '/products',
   asyncHandler(async (req, res) => {
     const { storeId } = requireStore(req);
     const rate = await getStoreRate(storeId);
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId.trim() : '';
     const where: Prisma.ProductWhereInput = {
       storeId,
       isActive: true,
@@ -84,18 +123,22 @@ posRouter.get(
     if (q) {
       where.name = { contains: q, mode: Prisma.QueryMode.insensitive };
     }
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+    const listArgs = { where, orderBy: { name: 'asc' as const }, ...productWithCategoryArgs };
     const rawLimit = Number(req.query.limit);
     const rawOffset = Number(req.query.offset);
     const usePagination = Number.isFinite(rawLimit) || Number.isFinite(rawOffset);
     if (!usePagination) {
-      const products = await prisma.product.findMany({ where, orderBy: { name: 'asc' } });
+      const products = await prisma.product.findMany(listArgs);
       res.json(products.map(p => serializeProduct(p, rate)));
       return;
     }
     const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 36, 1), 100);
     const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
     const [products, total] = await Promise.all([
-      prisma.product.findMany({ where, orderBy: { name: 'asc' }, take: limit, skip: offset }),
+      prisma.product.findMany({ ...listArgs, take: limit, skip: offset }),
       prisma.product.count({ where }),
     ]);
     res.json({
@@ -113,6 +156,7 @@ posRouter.get(
     const rate = await getStoreRate(storeId);
     const product = await prisma.product.findFirst({
       where: { storeId, barcode: req.params.code, isActive: true },
+      ...productWithCategoryArgs,
     });
     if (!product) throw new AppError(404, 'PRODUCT_NOT_FOUND', 'Producto no encontrado');
     res.json(serializeProduct(product, rate));
@@ -127,6 +171,7 @@ const productBody = z.object({
   stock: z.number().optional(),
   barcode: z.string().nullable().optional(),
   lowStockThreshold: z.number().nullable().optional(),
+  categoryId: z.string().uuid().nullable().optional(),
 });
 
 posRouter.post(
@@ -136,8 +181,16 @@ posRouter.post(
     const parsed = productBody.safeParse(req.body);
     if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Producto inválido');
     const rate = await getStoreRate(storeId);
+    const { categoryId: bodyCategoryId, ...rest } = parsed.data;
+    const categoryId = await resolveProductCategoryId(storeId, bodyCategoryId);
     const product = await prisma.product.create({
-      data: { storeId, ...parsed.data, stock: parsed.data.stock ?? 0 },
+      data: {
+        storeId,
+        ...rest,
+        stock: parsed.data.stock ?? 0,
+        ...(categoryId !== undefined ? { categoryId } : {}),
+      },
+      ...productWithCategoryArgs,
     });
     res.status(201).json(serializeProduct(product, rate));
   }),
@@ -152,7 +205,14 @@ posRouter.patch(
     const rate = await getStoreRate(storeId);
     const existing = await prisma.product.findFirst({ where: { id: req.params.id, storeId } });
     if (!existing) throw new AppError(404, 'PRODUCT_NOT_FOUND', 'Producto no encontrado');
-    const product = await prisma.product.update({ where: { id: existing.id }, data: parsed.data });
+    const { categoryId: bodyCategoryId, ...patchRest } = parsed.data;
+    const categoryId = await resolveProductCategoryId(storeId, bodyCategoryId);
+    const data = { ...patchRest, ...(categoryId !== undefined ? { categoryId } : {}) };
+    const product = await prisma.product.update({
+      where: { id: existing.id },
+      data,
+      ...productWithCategoryArgs,
+    });
     res.json(serializeProduct(product, rate));
   }),
 );
@@ -181,7 +241,11 @@ posRouter.post(
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Ajuste inválido');
     const rate = await getStoreRate(storeId);
-    const product = await adjustInventory(storeId, parsed.data.productId, parsed.data.qtyDelta, parsed.data.type, parsed.data.note);
+    await adjustInventory(storeId, parsed.data.productId, parsed.data.qtyDelta, parsed.data.type, parsed.data.note);
+    const product = await prisma.product.findFirstOrThrow({
+      where: { id: parsed.data.productId, storeId },
+      ...productWithCategoryArgs,
+    });
     res.json(serializeProduct(product, rate));
   }),
 );
@@ -504,7 +568,10 @@ posRouter.get(
     const since = req.query.since ? new Date(String(req.query.since)) : new Date(0);
     const rate = await getStoreRate(storeId);
     const [products, customers, store] = await Promise.all([
-      prisma.product.findMany({ where: { storeId, updatedAt: { gte: since } } }),
+      prisma.product.findMany({
+        where: { storeId, updatedAt: { gte: since } },
+        ...productWithCategoryArgs,
+      }),
       prisma.customer.findMany({ where: { storeId, createdAt: { gte: since } } }),
       prisma.store.findUniqueOrThrow({ where: { id: storeId } }),
     ]);
