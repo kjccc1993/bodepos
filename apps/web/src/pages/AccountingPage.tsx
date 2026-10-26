@@ -2,12 +2,12 @@ import { Box, Button, Flex, Stack } from '@chakra-ui/react';
 import { Navigate } from 'react-router-dom';
 import { NavChevronButton } from '@/components/nav/NavChevronButton';
 import { GenericHeading } from '@/components/ui';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useLogout } from '@/lib/auth/useLogout';
 import { accountingNavLinks } from '@/lib/nav/accounting-nav';
 import { useIsDesktopNav } from '@/lib/nav/useIsDesktopNav';
 
 export function AccountingPage() {
-  const { logout } = useAuth();
+  const logout = useLogout();
   const isDesktopNav = useIsDesktopNav();
 
   if (isDesktopNav) {
@@ -26,7 +26,7 @@ export function AccountingPage() {
       </Stack>
 
       <Box flexShrink={0} display={{ base: 'block', lg: 'none' }} pt={3} mt="auto">
-        <Button w="full" size="md" colorPalette="red" variant="subtle" onClick={logout}>
+        <Button type="button" w="full" size="md" colorPalette="red" variant="subtle" onClick={logout}>
           Cerrar sesión
         </Button>
       </Box>

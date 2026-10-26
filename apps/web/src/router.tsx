@@ -8,10 +8,11 @@ import { InvoicesPage } from '@/pages/InvoicesPage';
 import { DailyIncomesPage } from '@/pages/DailyIncomesPage';
 import { CustomerDetailPage } from '@/pages/CustomerDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
-import { getToken } from '@/lib/http/client';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  if (!getToken()) return <Navigate to="/login" replace />;
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
   return children;
 }
 

@@ -6,7 +6,7 @@ import { NavIcon, type NavIconId } from '@/components/nav/NavIcons';
 import { SidebarAccountingNav } from '@/components/nav/SidebarAccountingNav';
 import { SidebarUserBlock } from '@/components/nav/SidebarUserBlock';
 import { isAccountingPath } from '@/lib/nav/accounting-nav';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useLogout } from '@/lib/auth/useLogout';
 import { useBcvRateSync, useCatalogBackgroundSync } from '@/lib/api/hooks';
 import { navItemActiveProps, navItemIdleProps, sidebarChromeProps } from '@/lib/design/surface-styles';
 import { isOnline } from '@/lib/offline/sync';
@@ -104,7 +104,7 @@ function BottomNav({ pathname }: { pathname: string }) {
 export function PosShell() {
   const loc = useLocation();
   const isTradeView = loc.pathname === '/sell' || loc.pathname === '/products';
-  const { logout } = useAuth();
+  const logout = useLogout();
   const [online, setOnline] = useState(isOnline());
   useBcvRateSync();
   const [deferHeavySync, setDeferHeavySync] = useState(false);
@@ -190,6 +190,7 @@ export function PosShell() {
             </Badge>
           )}
           <Button
+            type="button"
             variant="outline"
             size="md"
             w="full"
