@@ -215,41 +215,56 @@ export function ProductsPage() {
                   onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </FormField>
-              <FormField label="Costo" htmlFor={fieldIds.cost}>
-                <MoneyAmountInput
-                  id={fieldIds.cost}
-                  value={Number(form.costUsd ?? 0)}
-                  onChange={costUsd => {
-                    const cost = roundUsd(costUsd);
-                    if (priceDriverRef.current === 'profit' && lockedProfitPct != null && cost > 0) {
-                      setForm({
-                        ...form,
-                        costUsd: cost,
-                        priceUsd: priceUsdFromProfitMarkupPercent(cost, lockedProfitPct),
-                      });
-                      return;
-                    }
-                    setForm({ ...form, costUsd: cost });
-                  }}
+              <FormField label="Unidad de venta" htmlFor={fieldIds.unit}>
+                <GenericSelect
+                  options={UNIT_OPTIONS}
+                  value={unitValue}
+                  onChange={v => setForm({ ...form, unit: v as ProductUnit })}
+                  name={fieldIds.unit}
+                  aria-label="Unidad de venta"
                 />
               </FormField>
-              <FormField label="Ganancia %" htmlFor={fieldIds.profit}>
-                <ProfitPercentInput
-                  id={fieldIds.profit}
-                  value={formProfitPct}
-                  onChange={profitPct => {
-                    priceDriverRef.current = 'profit';
-                    setLockedProfitPct(roundUsd(profitPct));
-                    const cost = roundUsd(Number(form.costUsd ?? 0));
-                    if (cost > 0) {
-                      setForm({
-                        ...form,
-                        priceUsd: priceUsdFromProfitMarkupPercent(cost, profitPct),
-                      });
-                    }
-                  }}
-                />
-              </FormField>
+              <Flex direction={{ base: 'column', md: 'row' }} gap={2} w="full">
+                <Box flex={1} minW={0}>
+                  <FormField label="Costo" htmlFor={fieldIds.cost}>
+                    <MoneyAmountInput
+                      id={fieldIds.cost}
+                      value={Number(form.costUsd ?? 0)}
+                      onChange={costUsd => {
+                        const cost = roundUsd(costUsd);
+                        if (priceDriverRef.current === 'profit' && lockedProfitPct != null && cost > 0) {
+                          setForm({
+                            ...form,
+                            costUsd: cost,
+                            priceUsd: priceUsdFromProfitMarkupPercent(cost, lockedProfitPct),
+                          });
+                          return;
+                        }
+                        setForm({ ...form, costUsd: cost });
+                      }}
+                    />
+                  </FormField>
+                </Box>
+                <Box flex={1} minW={0}>
+                  <FormField label="Ganancia %" htmlFor={fieldIds.profit}>
+                    <ProfitPercentInput
+                      id={fieldIds.profit}
+                      value={formProfitPct}
+                      onChange={profitPct => {
+                        priceDriverRef.current = 'profit';
+                        setLockedProfitPct(roundUsd(profitPct));
+                        const cost = roundUsd(Number(form.costUsd ?? 0));
+                        if (cost > 0) {
+                          setForm({
+                            ...form,
+                            priceUsd: priceUsdFromProfitMarkupPercent(cost, profitPct),
+                          });
+                        }
+                      }}
+                    />
+                  </FormField>
+                </Box>
+              </Flex>
               {formCostUsd <= 0 && (
                 <GenericText variant="muted" fontSize="sm" px={0.5}>
                   Indica un costo mayor a 0 para calcular la ganancia.
@@ -291,15 +306,6 @@ export function ProductsPage() {
                   id={fieldIds.barcode}
                   value={form.barcode ?? ''}
                   onChange={e => setForm({ ...form, barcode: e.target.value })}
-                />
-              </FormField>
-              <FormField label="Unidad de venta" htmlFor={fieldIds.unit}>
-                <GenericSelect
-                  options={UNIT_OPTIONS}
-                  value={unitValue}
-                  onChange={v => setForm({ ...form, unit: v as ProductUnit })}
-                  name={fieldIds.unit}
-                  aria-label="Unidad de venta"
                 />
               </FormField>
               <Flex gap={2}>
