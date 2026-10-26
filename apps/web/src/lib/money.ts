@@ -47,3 +47,17 @@ export function formatBs(n: number) {
 export function usdToBs(usd: number, rate: number) {
   return roundBs(roundUsd(usd) * rate);
 }
+
+/** Ganancia sobre costo: (precio venta − costo) / costo × 100. */
+export function profitMarkupPercent(costUsd: number, priceUsd: number): number | null {
+  const cost = roundUsd(costUsd);
+  const price = roundUsd(priceUsd);
+  if (cost <= 0 || !Number.isFinite(cost) || !Number.isFinite(price)) return null;
+  return roundUsd(((price - cost) / cost) * 100);
+}
+
+export function formatProfitMarkupPercent(costUsd: number, priceUsd: number): string {
+  const pct = profitMarkupPercent(costUsd, priceUsd);
+  if (pct == null) return '—';
+  return `${pct.toLocaleString('es-VE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+}

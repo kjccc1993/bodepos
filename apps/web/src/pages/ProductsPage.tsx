@@ -6,6 +6,7 @@ import { FormField, GenericHeading, GenericInput, GenericSearchInput, GenericSel
 import { useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
 import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatProfitMarkupPercent, profitMarkupPercent } from '@/lib/money';
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
 import { apiFetch } from '@/lib/http/client';
@@ -28,6 +29,9 @@ export function ProductsPage() {
   const onInventory = useCallback((p: Product) => setInventoryProduct(p), []);
   const save = useSaveProduct();
   const qc = useQueryClient();
+  const formCostUsd = Number(form?.costUsd ?? 0);
+  const formPriceUsd = Number(form?.priceUsd ?? 0);
+  const formProfitPct = form ? profitMarkupPercent(formCostUsd, formPriceUsd) : null;
 
   const unitValue = form?.unit ?? 'UNIT';
   const fieldIds = {
@@ -175,6 +179,15 @@ export function ProductsPage() {
                   onChange={e => setForm({ ...form, priceUsd: Number(e.target.value.replace(',', '.')) })}
                 />
               </FormField>
+              <Box px={0.5}>
+                <GenericText
+                  variant={formProfitPct != null && formProfitPct < 0 ? 'error' : 'muted'}
+                  fontSize="sm"
+                >
+                  Ganancia: {formatProfitMarkupPercent(formCostUsd, formPriceUsd)}
+                  {formCostUsd > 0 ? ' sobre el costo' : ' (indica un costo mayor a 0)'}
+                </GenericText>
+              </Box>
               <FormField label="Código de barras" htmlFor={fieldIds.barcode}>
                 <GenericInput
                   id={fieldIds.barcode}
