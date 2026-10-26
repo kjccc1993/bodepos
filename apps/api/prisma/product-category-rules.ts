@@ -25,6 +25,7 @@ const NAME_OVERRIDES: Record<string, StoreCategoryName> = {
   Huevis: 'Despensa',
   Hyevos: 'Despensa',
   'Polar light': 'Bebidas alcohólicas',
+  'Panque 11 normal': 'Chucherías',
   Bocadillos: 'Chucherías',
   'Fruty aros de lonchera': 'Despensa',
   Boka: 'Despensa',
