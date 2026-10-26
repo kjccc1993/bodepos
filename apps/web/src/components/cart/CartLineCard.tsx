@@ -13,6 +13,7 @@ export function cartLineAsProduct(line: CartLine, rate: number, stock: number): 
     name: line.productName,
     priceUsd: line.unitPriceUsd,
     priceBs: usdToBs(line.unitPriceUsd, rate),
+    costUsd: 0,
     unit: line.unit,
     stock,
     barcode: null,
