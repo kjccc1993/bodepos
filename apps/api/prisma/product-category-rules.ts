@@ -24,6 +24,14 @@ const NAME_OVERRIDES: Record<string, StoreCategoryName> = {
   Cheeskesitos: 'Chucherías',
   Huevis: 'Despensa',
   Hyevos: 'Despensa',
+  'Polar light': 'Bebidas alcohólicas',
+  Bocadillos: 'Chucherías',
+  'Fruty aros de lonchera': 'Despensa',
+  Boka: 'Despensa',
+  Raquty: 'Chucherías',
+  'Coco ranch': 'Chucherías',
+  Samba: 'Chucherías',
+  'Pigsi  gde': 'Chucherías',
 };
 
 const RULES: { pattern: RegExp; category: StoreCategoryName }[] = [
@@ -34,7 +42,7 @@ const RULES: { pattern: RegExp; category: StoreCategoryName }[] = [
   },
   { pattern: /Suavizante|Jabón Alive/, category: 'Limpieza del hogar' },
   { pattern: /Solera|Samba|Cerveza|polarcita|Raquty|Boka|Pigsi|Coco ranch/, category: 'Bebidas alcohólicas' },
-  { pattern: /Refresco|Glup|Agua |Nevada|Max coco|Fruty|Polar light/, category: 'Bebidas' },
+  { pattern: /Refresco|Glup|Agua |Nevada|Max coco|Fruty/, category: 'Bebidas' },
   { pattern: /Leche |Queso |Jamón|Mortadela/, category: 'Charcutería' },
   { pattern: /Muslo|Alas de|Para de pollo|Patas de pollo/, category: 'Carnicería' },
   { pattern: /Pan blanco|Pan de mantequilla|Pan mini sobaso|Panque|Panqué/, category: 'Panadería' },
@@ -51,9 +59,17 @@ const RULES: { pattern: RegExp; category: StoreCategoryName }[] = [
   },
 ];
 
+function nameOverrideFor(productName: string): StoreCategoryName | undefined {
+  const lower = productName.toLowerCase();
+  for (const [key, category] of Object.entries(NAME_OVERRIDES)) {
+    if (key.toLowerCase() === lower) return category;
+  }
+  return undefined;
+}
+
 export function categoryNameForProduct(productName: string): StoreCategoryName {
   const n = productName.trim();
-  const override = NAME_OVERRIDES[n];
+  const override = nameOverrideFor(n);
   if (override) return override;
   for (const { pattern, category } of RULES) {
     if (pattern.test(n)) return category;
