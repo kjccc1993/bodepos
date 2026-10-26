@@ -43,6 +43,7 @@ export function GenericSelect({
   const borderColor = invalid ? 'red.500' : disabled ? DISABLED_FIELD.borderColor : 'gray.300';
   const fieldHeight = formControlFieldHeight(size);
   const selectSize = size === 'xl' ? 'lg' : size;
+  const wideMenu = Boolean(menuMinWidth);
 
   return (
     <Select.Root
@@ -58,6 +59,17 @@ export function GenericSelect({
       invalid={invalid}
       bg={disabled ? DISABLED_FIELD.bg : 'white'}
       disabled={disabled}
+      positioning={
+        wideMenu
+          ? {
+              placement: menuPlacement,
+              sameWidth: false,
+              gutter: 6,
+              flip: true,
+              overflowPadding: 8,
+            }
+          : undefined
+      }
       {...disabledFieldRootStyles}
     >
       <Select.HiddenSelect />
@@ -88,7 +100,7 @@ export function GenericSelect({
         </Select.IndicatorGroup>
       </Select.Control>
       <Portal>
-        <Select.Positioner zIndex={50} position={menuPlacement}>
+        <Select.Positioner zIndex={50}>
           <Select.Content
             bg="white"
             borderWidth="1px"
@@ -97,8 +109,8 @@ export function GenericSelect({
             shadow="md"
             maxH="min(320px, 50dvh)"
             minW={menuMinWidth ?? 'var(--reference-width)'}
-            w={menuMinWidth ? 'max-content' : undefined}
-            maxW={menuMinWidth ? 'min(20rem, calc(100dvw - 1rem))' : undefined}
+            w={wideMenu ? 'max-content' : undefined}
+            maxW={wideMenu ? 'min(20rem, calc(100dvw - 1rem))' : undefined}
             overflowX="hidden"
           >
             {options.map(item => (
@@ -109,7 +121,7 @@ export function GenericSelect({
                 px={3}
                 minH={{ base: 'touch', lg: undefined }}
                 cursor="pointer"
-                whiteSpace={menuMinWidth ? 'nowrap' : undefined}
+                whiteSpace={wideMenu ? 'nowrap' : undefined}
                 _hover={{ bg: 'gray.50' }}
               >
                 {item.label}

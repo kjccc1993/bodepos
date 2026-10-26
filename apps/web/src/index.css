@@ -12,3 +12,18 @@ body {
   font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
   background: #f7f8fa;
 }
+
+/* Móvil: scroll sin barra visible (listas, selects, main). */
+@media (max-width: 47.999rem) {
+  body,
+  body * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  body *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
