@@ -15,6 +15,7 @@ import { formatInvoiceLineQuantity, invoiceLineTotalBs } from '@/lib/invoices/li
 import { InvoiceTotalsCard } from '@/components/invoices/InvoiceTotalsCard';
 import { breakdownFromInvoice } from '@/lib/invoices/totals';
 import { formatBs, formatUsd } from '@/lib/money';
+import { InvoicePaymentDialog } from '@/components/invoices/InvoicePaymentDialog';
 import type { Invoice } from '@/lib/types';
 
 /** Misma plantilla en encabezado y filas para alinear Cant. / USD / Bs. */
@@ -30,14 +31,19 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onDelete: (invoice: Invoice) => void | Promise<void>;
+  onInvoiceUpdated?: (invoice: Invoice) => void;
 };
 
-export function InvoiceDetailDialog({ invoice, open, onClose, onDelete }: Props) {
+export function InvoiceDetailDialog({ invoice, open, onClose, onDelete, onInvoiceUpdated }: Props) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
   useEffect(() => {
-    if (!open) setDeleteConfirmOpen(false);
+    if (!open) {
+      setDeleteConfirmOpen(false);
+      setPaymentOpen(false);
+    }
   }, [open]);
 
   if (!invoice) {
@@ -207,8 +213,13 @@ export function InvoiceDetailDialog({ invoice, open, onClose, onDelete }: Props)
               >
                 Eliminar
               </Button>
-              <Button flex="1" colorPalette="green" size="sm" disabled title="Próximamente">
-                Editar
+              <Button
+                flex="1"
+                colorPalette="green"
+                size="sm"
+                onClick={() => setPaymentOpen(true)}
+              >
+                {invoice.status === 'PENDING' ? 'Pagar' : 'Editar pago'}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>
@@ -225,6 +236,13 @@ export function InvoiceDetailDialog({ invoice, open, onClose, onDelete }: Props)
         cancelLabel="Cancelar"
         onConfirm={() => void handleConfirmDelete()}
         loading={deleting}
+      />
+
+      <InvoicePaymentDialog
+        invoice={invoice}
+        open={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+        onSaved={updated => onInvoiceUpdated?.(updated)}
       />
     </>
   );

@@ -1,22 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { GenericInput, type GenericInputProps } from '@/components/ui/input/GenericInput';
 import { formatMoneyDraft, formatMoneyInput, parseMoneyAmount } from '@/lib/money';
-import { isIncompleteDecimalDraft, sanitizeDecimalInput } from '@/lib/utils/numeric-input';
+import { sanitizeDecimalInput } from '@/lib/utils/numeric-input';
 
 type Props = Omit<GenericInputProps, 'value' | 'onChange' | 'decimal'> & {
   value: number;
   onChange: (n: number) => void;
 };
 
-/** Monto editable: escribe libre; al salir del campo redondea y muestra 2 decimales. */
+/** Monto editable: escribe libre mientras está enfocado; al salir redondea, formatea y confirma. */
 export function MoneyAmountInput({ value, onChange, onBlur, onFocus, ...props }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
-
-  useEffect(() => {
-    setDraft(null);
-  }, [value]);
-
-  const displayed = draft ?? (value ? formatMoneyInput(value) : '');
+  const editing = draft !== null;
+  const displayed = editing ? draft : value ? formatMoneyInput(value) : '';
 
   return (
     <GenericInput
@@ -27,13 +23,12 @@ export function MoneyAmountInput({ value, onChange, onBlur, onFocus, ...props }:
         onFocus?.(e);
       }}
       onChange={e => {
-        const next = sanitizeDecimalInput(e.target.value);
-        setDraft(next);
-        if (!isIncompleteDecimalDraft(next)) onChange(parseMoneyAmount(next));
+        setDraft(sanitizeDecimalInput(e.target.value));
       }}
       onBlur={e => {
-        onChange(parseMoneyAmount(draft ?? e.target.value));
+        const parsed = parseMoneyAmount(draft ?? e.target.value);
         setDraft(null);
+        onChange(parsed);
         onBlur?.(e);
       }}
       {...props}

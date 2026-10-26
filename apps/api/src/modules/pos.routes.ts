@@ -7,6 +7,8 @@ import { prisma } from '../shared/prisma.js';
 import { toNumber } from '../shared/money.js';
 import { authRequired, requireStore } from '../shared/session.js';
 import { adjustInventory, executeCheckout } from './checkout.service.js';
+import { createOpeningBalanceInvoice } from './opening-balance-invoice.js';
+import { applyInvoicePayments } from './invoice-payment.service.js';
 import {
   normalizeStoreRateState,
   refreshBcvRateIfNeeded,
@@ -313,14 +315,26 @@ posRouter.post(
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Cliente inválido');
     const rate = await getStoreRate(storeId);
-    const customer = await prisma.customer.create({
-      data: {
-        storeId,
-        name: parsed.data.name,
-        phone: parsed.data.phone,
-        debtUsd: parsed.data.debtUsd ?? 0,
-        colorTag: parsed.data.colorTag,
-      },
+    const initialDebtUsd = parsed.data.debtUsd ?? 0;
+    const customer = await prisma.$transaction(async tx => {
+      const created = await tx.customer.create({
+        data: {
+          storeId,
+          name: parsed.data.name,
+          phone: parsed.data.phone,
+          debtUsd: initialDebtUsd,
+          colorTag: parsed.data.colorTag,
+        },
+      });
+      if (initialDebtUsd > 0) {
+        await createOpeningBalanceInvoice(tx, {
+          storeId,
+          customerId: created.id,
+          debtUsd: initialDebtUsd,
+          rateApplied: rate,
+        });
+      }
+      return created;
     });
     res.status(201).json(serializeCustomer(customer, rate));
   }),
@@ -458,6 +472,38 @@ posRouter.get(
       orderBy: { createdAt: 'desc' },
     });
     res.json(invoices.map(i => serializeInvoice(i, rate)));
+  }),
+);
+
+const invoicePaymentsSchema = z.object({
+  totalUsd: z.number().positive().optional(),
+  payments: z.object({
+    usdCash: z.number().optional(),
+    posBs: z.number().optional(),
+    pos2Bs: z.number().optional(),
+    mobileBs: z.number().optional(),
+    cashBs: z.number().optional(),
+    biopagoBs: z.number().optional(),
+  }),
+  change: z
+    .object({
+      bs: z.number().optional(),
+      usd: z.number().optional(),
+      mobileBs: z.number().optional(),
+    })
+    .optional()
+    .default({}),
+});
+
+posRouter.patch(
+  '/invoices/:id/payments',
+  asyncHandler(async (req, res) => {
+    const { storeId } = requireStore(req);
+    const parsed = invoicePaymentsSchema.safeParse(req.body);
+    if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Pago inválido');
+    const invoice = await applyInvoicePayments(storeId, req.params.id, parsed.data);
+    const rate = toNumber(invoice.rateApplied);
+    res.json(serializeInvoice(invoice, rate));
   }),
 );
 

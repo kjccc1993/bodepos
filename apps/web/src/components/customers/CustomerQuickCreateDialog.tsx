@@ -13,11 +13,13 @@ type Props = {
 export function CustomerQuickCreateDialog({ open, onOpenChange, onCreated }: Props) {
   const save = useSaveCustomer();
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [debtUsd, setDebtUsd] = useState(0);
   const [error, setError] = useState('');
 
   const reset = () => {
     setName('');
+    setPhone('');
     setDebtUsd(0);
     setError('');
   };
@@ -35,7 +37,12 @@ export function CustomerQuickCreateDialog({ open, onOpenChange, onCreated }: Pro
     }
     setError('');
     try {
-      const customer = await save.mutateAsync({ name: trimmed, debtUsd });
+      const phoneTrimmed = phone.trim();
+      const customer = await save.mutateAsync({
+        name: trimmed,
+        debtUsd,
+        ...(phoneTrimmed ? { phone: phoneTrimmed } : {}),
+      });
       onCreated(customer);
       reset();
       onOpenChange(false);
@@ -74,6 +81,14 @@ export function CustomerQuickCreateDialog({ open, onOpenChange, onCreated }: Pro
                   value={name}
                   onChange={e => setName(e.target.value)}
                   autoFocus
+                />
+                <GenericInput
+                  size="sm"
+                  placeholder="Teléfono"
+                  aria-label="Teléfono del cliente"
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
                 />
                 <MoneyAmountInput
                   size="sm"

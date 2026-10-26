@@ -4,7 +4,8 @@ import { useParams } from 'react-router-dom';
 import { InvoiceDetailDialog } from '@/components/invoices/InvoiceDetailDialog';
 import { InvoiceListCard } from '@/components/invoices/InvoiceListCard';
 import { BackChevronLink } from '@/components/nav/BackChevronLink';
-import { GenericHeading, GenericText } from '@/components/ui';
+import { GenericDataTable, GenericHeading, GenericText } from '@/components/ui';
+import { buildInvoiceTableColumns } from '@/lib/invoices/table-columns';
 import { SummaryAmountCard } from '@/components/ui/SummaryAmountCard';
 import { useCustomerDetail } from '@/lib/api/hooks';
 import { apiFetch } from '@/lib/http/client';
@@ -19,6 +20,8 @@ export function CustomerDetailPage() {
     () => customer?.invoices.filter(inv => inv.status === 'PENDING').length ?? 0,
     [customer?.invoices],
   );
+
+  const invoiceColumns = useMemo(() => buildInvoiceTableColumns({ showCustomer: false }), []);
 
   const deleteInvoice = useCallback(
     async (id: string) => {
@@ -82,14 +85,27 @@ export function CustomerDetailPage() {
 
             {customer.invoices.length === 0 ? (
               <GenericText variant="muted" py={4} textAlign="center">
-                Este cliente aún no tiene facturas.
+                {customer.debtUsd > 0
+                  ? 'Hay deuda registrada pero aún no aparece una factura asociada. Recarga la página; si persiste, avisa al administrador.'
+                  : 'Este cliente aún no tiene facturas.'}
               </GenericText>
             ) : (
-              <Stack gap={2}>
-                {customer.invoices.map(inv => (
-                  <InvoiceListCard key={inv.id} invoice={inv} onOpen={() => setDetailInvoice(inv)} />
-                ))}
-              </Stack>
+              <>
+                <Stack gap={2} display={{ base: 'flex', md: 'none' }}>
+                  {customer.invoices.map(inv => (
+                    <InvoiceListCard key={inv.id} invoice={inv} onOpen={() => setDetailInvoice(inv)} />
+                  ))}
+                </Stack>
+                <Box display={{ base: 'none', md: 'block' }}>
+                  <GenericDataTable
+                    columns={invoiceColumns}
+                    rows={customer.invoices}
+                    getRowKey={inv => inv.id}
+                    emptyMessage="Este cliente aún no tiene facturas."
+                    onRowClick={inv => setDetailInvoice(inv)}
+                  />
+                </Box>
+              </>
             )}
           </Box>
         </Stack>
@@ -100,6 +116,10 @@ export function CustomerDetailPage() {
         open={detailInvoice != null}
         onClose={() => setDetailInvoice(null)}
         onDelete={inv => deleteInvoice(inv.id)}
+        onInvoiceUpdated={inv => {
+          setDetailInvoice(inv);
+          void refetch();
+        }}
       />
     </Flex>
   );

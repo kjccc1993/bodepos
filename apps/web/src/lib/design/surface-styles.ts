@@ -1,3 +1,5 @@
+import { FORM_CONTROL_BORDER_RADIUS } from '@/components/ui/form-control-metrics';
+
 /** RestroBit-style surfaces: soft borders, light shadows, rounded corners. */
 
 export const pageBg = '#F7F8FA';
@@ -78,6 +80,25 @@ export const primarySolidButtonProps = {
 export const secondarySolidButtonProps = {
   colorPalette: 'brand',
   borderRadius: 'xl',
+} as const;
+
+/** Auxiliares de fila de pago (Todo / Resto): fondo claro, borde gris, texto gris. */
+export const paymentHelperButtonProps = {
+  variant: 'outline' as const,
+  bg: 'white',
+  borderWidth: '1px',
+  borderColor: 'gray.200',
+  borderRadius: FORM_CONTROL_BORDER_RADIUS,
+  boxShadow: 'none',
+  color: 'gray.700',
+  fontWeight: 'normal',
+  _hover: {
+    bg: 'gray.50',
+    borderColor: 'gray.300',
+  },
+  _active: {
+    bg: 'gray.100',
+  },
 } as const;
 
 /** Icon-only outline (estilo “Draft List”, sin texto). */

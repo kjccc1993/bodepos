@@ -1,13 +1,28 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/react';
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { AdminCatalogGrid } from '@/components/products/AdminCatalogGrid';
 import { InventoryAdjustDialog } from '@/components/products/InventoryAdjustDialog';
 import { ProductSearchWithCategory } from '@/components/products/ProductSearchWithCategory';
-import { FormField, GenericHeading, GenericInput, GenericSelect, GenericText, MoneyAmountInput, type SelectOption } from '@/components/ui';
+import {
+  FormField,
+  GenericHeading,
+  GenericInput,
+  GenericSelect,
+  GenericText,
+  MoneyAmountInput,
+  ProfitPercentInput,
+  type SelectOption,
+} from '@/components/ui';
 import { useProductCategories, useSaveProduct, useStoreSettings } from '@/lib/api/hooks';
 import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatProfitMarkupPercent, profitMarkupPercent } from '@/lib/money';
+import {
+  formatBs,
+  priceUsdFromProfitMarkupPercent,
+  profitMarkupPercent,
+  roundUsd,
+  usdToBs,
+} from '@/lib/money';
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
 import { apiFetch } from '@/lib/http/client';
@@ -25,22 +40,35 @@ export function ProductsPage() {
   const { data: categories = [] } = useProductCategories();
   const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null);
   const [form, setForm] = useState<Partial<Product> | null>(null);
+  const [lockedProfitPct, setLockedProfitPct] = useState<number | null>(null);
+  const priceDriverRef = useRef<'profit' | 'price' | null>(null);
   const [inventoryProduct, setInventoryProduct] = useState<Product | null>(null);
   const [inventoryBusy, setInventoryBusy] = useState(false);
   const { products, sentinelRef, isLoading, isFetchingNextPage } = useInfiniteProductList(search, categoryId);
-  const onEdit = useCallback((p: Product) => setForm(p), []);
+
+  const openProductForm = useCallback((p: Partial<Product>) => {
+    priceDriverRef.current = null;
+    setLockedProfitPct(null);
+    setForm(p);
+  }, []);
+
+  const onEdit = useCallback((p: Product) => openProductForm(p), [openProductForm]);
   const onInventory = useCallback((p: Product) => setInventoryProduct(p), []);
   const save = useSaveProduct();
   const qc = useQueryClient();
   const formCostUsd = Number(form?.costUsd ?? 0);
   const formPriceUsd = Number(form?.priceUsd ?? 0);
-  const formProfitPct = form ? profitMarkupPercent(formCostUsd, formPriceUsd) : null;
+  const derivedProfitPct = form ? profitMarkupPercent(formCostUsd, formPriceUsd) : null;
+  const formProfitPct =
+    priceDriverRef.current === 'profit' && lockedProfitPct != null ? lockedProfitPct : derivedProfitPct;
 
   const unitValue = form?.unit ?? 'UNIT';
   const fieldIds = {
     name: useId(),
     price: useId(),
+    priceBs: useId(),
     cost: useId(),
+    profit: useId(),
     barcode: useId(),
     unit: useId(),
     category: useId(),
@@ -58,7 +86,7 @@ export function ProductsPage() {
             colorPalette="green"
             flexShrink={0}
             onClick={() =>
-              setForm({
+              openProductForm({
                 name: '',
                 priceUsd: 1,
                 costUsd: 0,
@@ -187,29 +215,77 @@ export function ProductsPage() {
                   onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </FormField>
-              <FormField label="Costo USD" htmlFor={fieldIds.cost}>
+              <FormField label="Costo" htmlFor={fieldIds.cost}>
                 <MoneyAmountInput
                   id={fieldIds.cost}
                   value={Number(form.costUsd ?? 0)}
-                  onChange={costUsd => setForm({ ...form, costUsd })}
+                  onChange={costUsd => {
+                    const cost = roundUsd(costUsd);
+                    if (priceDriverRef.current === 'profit' && lockedProfitPct != null && cost > 0) {
+                      setForm({
+                        ...form,
+                        costUsd: cost,
+                        priceUsd: priceUsdFromProfitMarkupPercent(cost, lockedProfitPct),
+                      });
+                      return;
+                    }
+                    setForm({ ...form, costUsd: cost });
+                  }}
                 />
               </FormField>
-              <FormField label="Precio venta USD" htmlFor={fieldIds.price}>
-                <MoneyAmountInput
-                  id={fieldIds.price}
-                  value={Number(form.priceUsd ?? 0)}
-                  onChange={priceUsd => setForm({ ...form, priceUsd })}
+              <FormField label="Ganancia %" htmlFor={fieldIds.profit}>
+                <ProfitPercentInput
+                  id={fieldIds.profit}
+                  value={formProfitPct}
+                  onChange={profitPct => {
+                    priceDriverRef.current = 'profit';
+                    setLockedProfitPct(roundUsd(profitPct));
+                    const cost = roundUsd(Number(form.costUsd ?? 0));
+                    if (cost > 0) {
+                      setForm({
+                        ...form,
+                        priceUsd: priceUsdFromProfitMarkupPercent(cost, profitPct),
+                      });
+                    }
+                  }}
                 />
               </FormField>
-              <Box px={0.5}>
-                <GenericText
-                  variant={formProfitPct != null && formProfitPct < 0 ? 'error' : 'muted'}
-                  fontSize="sm"
-                >
-                  Ganancia: {formatProfitMarkupPercent(formCostUsd, formPriceUsd)}
-                  {formCostUsd > 0 ? ' sobre el costo' : ' (indica un costo mayor a 0)'}
+              {formCostUsd <= 0 && (
+                <GenericText variant="muted" fontSize="sm" px={0.5}>
+                  Indica un costo mayor a 0 para calcular la ganancia.
                 </GenericText>
-              </Box>
+              )}
+              <Flex direction={{ base: 'column', md: 'row' }} gap={2} w="full">
+                <Box flex={1} minW={0}>
+                  <FormField label="Precio venta USD" htmlFor={fieldIds.price}>
+                    <MoneyAmountInput
+                      id={fieldIds.price}
+                      value={formPriceUsd}
+                      onChange={priceUsd => {
+                        priceDriverRef.current = 'price';
+                        setLockedProfitPct(null);
+                        setForm({ ...form, priceUsd: roundUsd(priceUsd) });
+                      }}
+                    />
+                  </FormField>
+                </Box>
+                <Box flex={1} minW={0}>
+                  <FormField label="Precio venta Bs" htmlFor={fieldIds.priceBs}>
+                    <GenericInput
+                      id={fieldIds.priceBs}
+                      readOnly
+                      disabled
+                      value={formatBs(usdToBs(formPriceUsd, rate))}
+                      bg="gray.50"
+                    />
+                  </FormField>
+                </Box>
+              </Flex>
+              {formProfitPct != null && formProfitPct < 0 && (
+                <GenericText variant="error" fontSize="sm" px={0.5}>
+                  El precio de venta es menor que el costo.
+                </GenericText>
+              )}
               <FormField label="Código de barras" htmlFor={fieldIds.barcode}>
                 <GenericInput
                   id={fieldIds.barcode}
@@ -227,7 +303,15 @@ export function ProductsPage() {
                 />
               </FormField>
               <Flex gap={2}>
-                <Button flex={1} variant="outline" onClick={() => setForm(null)}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  onClick={() => {
+                    priceDriverRef.current = null;
+                    setLockedProfitPct(null);
+                    setForm(null);
+                  }}
+                >
                   Cancelar
                 </Button>
                 <Button
@@ -243,6 +327,8 @@ export function ProductsPage() {
                       barcode: form.barcode ?? null,
                       categoryId: form.categoryId ?? null,
                     });
+                    priceDriverRef.current = null;
+                    setLockedProfitPct(null);
                     setForm(null);
                   }}
                 >

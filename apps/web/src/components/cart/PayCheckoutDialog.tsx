@@ -15,12 +15,19 @@ import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { CustomerQuickCreateDialog } from '@/components/customers/CustomerQuickCreateDialog';
 import { RateBadgeWithSettings } from '@/components/rate/RateBadgeWithSettings';
-import { GenericInput, GenericSelect, GenericText, MoneyAmountInput, type SelectOption } from '@/components/ui';
-import { formControlFieldHeight } from '@/components/ui/form-control-metrics';
+import {
+  emptyPayFields,
+  PayRow,
+  payFieldHeight,
+  payFieldSize,
+  TotalField,
+  type PayFields,
+} from '@/components/payments/payment-form';
+import { GenericSelect, GenericText, type SelectOption } from '@/components/ui';
 import { useCart } from '@/lib/cart/CartContext';
 import { lineTotalUsd } from '@/lib/cart/quantity';
 import { apiFetch } from '@/lib/http/client';
-import { formatBs, formatMoneyInput, formatUsd, roundBs, roundUsd, usdToBs } from '@/lib/money';
+import { formatBs, formatUsd, roundBs, roundUsd, usdToBs } from '@/lib/money';
 import { useCustomers, useStoreSettings } from '@/lib/api/hooks';
 import { customerSelectLabel } from '@/lib/customers';
 import { effectiveRate } from '@/lib/rate';
@@ -28,20 +35,7 @@ import { isOnline, queueOutbox } from '@/lib/offline/sync';
 import {
   outlineIconButtonProps,
   primarySolidButtonProps,
-  secondarySolidButtonProps,
 } from '@/lib/design/surface-styles';
-
-const payFieldSize = 'sm' as const;
-const payFieldHeight = formControlFieldHeight(payFieldSize);
-
-type PayFields = {
-  usdCash: number;
-  posBs: number;
-  pos2Bs: number;
-  mobileBs: number;
-  cashBs: number;
-  biopagoBs: number;
-};
 
 type Props = {
   open: boolean;
@@ -92,22 +86,13 @@ export function PayCheckoutDialog({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [createCustomerOpen, setCreateCustomerOpen] = useState(false);
 
-  const emptyPay = (): PayFields => ({
-    usdCash: 0,
-    posBs: 0,
-    pos2Bs: 0,
-    mobileBs: 0,
-    cashBs: 0,
-    biopagoBs: 0,
-  });
-
   const setPayField = (k: keyof PayFields, v: number) =>
     setPay(p => ({ ...p, [k]: k === 'usdCash' ? roundUsd(v) : roundBs(v) }));
 
   /** Un solo medio con monto; el resto en cero (Todo / Resto). */
   const setPayFieldExclusive = (k: keyof PayFields, v: number) => {
     const rounded = k === 'usdCash' ? roundUsd(v) : roundBs(v);
-    setPay({ ...emptyPay(), [k]: rounded });
+    setPay({ ...emptyPayFields(), [k]: rounded });
     setChange({ bs: 0, usd: 0, mobileBs: 0 });
   };
 
@@ -214,12 +199,17 @@ export function PayCheckoutDialog({ open, onClose }: Props) {
               borderColor="gray.200"
               py={3}
               px={4}
+              display="flex"
+              flexDirection="column"
+              alignItems="stretch"
             >
-              <Flex align="center" justify="space-between" gap={2} w="full" minH="8">
-                <Dialog.Title fontSize="lg" fontWeight="semibold" lineClamp={1} flexShrink={0}>
+              <Flex align="center" justify="space-between" gap={3} w="full" minW={0}>
+                <Dialog.Title fontSize="lg" fontWeight="semibold" lineClamp={1} minW={0} flex="1">
                   Pagar
                 </Dialog.Title>
-                <RateBadgeWithSettings />
+                <Box flexShrink={0}>
+                  <RateBadgeWithSettings />
+                </Box>
               </Flex>
             </Dialog.Header>
 
@@ -416,96 +406,5 @@ export function PayCheckoutDialog({ open, onClose }: Props) {
         onCreated={c => setCustomerId(c.id)}
       />
     </Dialog.Root>
-  );
-}
-
-function TotalField({
-  label,
-  value,
-  readOnly = false,
-  min,
-  onValueChange,
-}: {
-  label: string;
-  value: number | string;
-  readOnly?: boolean;
-  min?: number;
-  onValueChange?: (n: number) => void;
-}) {
-  const clampCharge = (n: number) => roundUsd(Math.max(min ?? 0, n));
-  const inputValue = typeof value === 'number' ? formatMoneyInput(value) : value;
-
-  return (
-    <Flex align="center" gap={3}>
-      <GenericText variant="label" flexShrink={0} minW="20">
-        {label}
-      </GenericText>
-      {readOnly || typeof value !== 'number' ? (
-        <GenericInput size={payFieldSize} readOnly value={inputValue} bg="gray.50" flex="1" />
-      ) : (
-        <MoneyAmountInput
-          size={payFieldSize}
-          flex="1"
-          value={value}
-          onChange={n => onValueChange?.(clampCharge(n))}
-        />
-      )}
-    </Flex>
-  );
-}
-
-function PayRow({
-  label,
-  value,
-  onChange,
-  onAll,
-  onRest,
-}: {
-  label: string;
-  value: number;
-  onChange: (n: number) => void;
-  onAll?: () => void;
-  onRest?: () => void;
-}) {
-  return (
-    <Flex gap={2} align="center">
-      <MoneyAmountInput
-        size={payFieldSize}
-        flex="1"
-        minW={0}
-        placeholder={label}
-        aria-label={label}
-        value={value}
-        onChange={onChange}
-      />
-      {onAll && (
-        <Button
-          minW="14"
-          px={3}
-          variant="solid"
-          h={payFieldHeight}
-          minH={payFieldHeight}
-          maxH={payFieldHeight}
-          onClick={onAll}
-          {...secondarySolidButtonProps}
-        >
-          Todo
-        </Button>
-      )}
-      {onRest && (
-        <Button
-          minW="14"
-          px={3}
-          variant="solid"
-          h={payFieldHeight}
-          minH={payFieldHeight}
-          maxH={payFieldHeight}
-          onClick={onRest}
-          {...secondarySolidButtonProps}
-        >
-          Resto
-        </Button>
-      )}
-    </Flex>
   );
 }

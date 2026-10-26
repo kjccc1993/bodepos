@@ -4,19 +4,16 @@ import { BackChevronLink } from '@/components/nav/BackChevronLink';
 import { InvoiceDaySummaryPanel } from '@/components/invoices/InvoiceDaySummaryPanel';
 import { InvoiceDetailDialog } from '@/components/invoices/InvoiceDetailDialog';
 import { InvoiceListCard } from '@/components/invoices/InvoiceListCard';
-import { InvoiceStatusBadge } from '@/components/invoices/InvoiceStatusBadge';
 import {
   GenericDataTable,
-  type DataTableColumn,
   GenericDatePicker,
   GenericHeading,
-  GenericText,
 } from '@/components/ui';
+import { buildInvoiceTableColumns } from '@/lib/invoices/table-columns';
 import { useInvoiceSummary, useInvoices } from '@/lib/api/hooks';
-import { formatInvoiceCreatedAt, formatInvoiceFilterDate } from '@/lib/invoices/format';
+import { formatInvoiceFilterDate } from '@/lib/invoices/format';
 import { VENEZUELA_TIME_ZONE } from '@/lib/utils/calendar';
 import { apiFetch } from '@/lib/http/client';
-import { formatBs, formatUsd } from '@/lib/money';
 import type { Invoice } from '@/lib/types';
 
 export function InvoicesPage() {
@@ -42,54 +39,7 @@ export function InvoicesPage() {
     [refetch],
   );
 
-  const columns = useMemo((): DataTableColumn<Invoice>[] => {
-    return [
-      {
-        id: 'number',
-        header: 'Nro',
-        cell: inv => (
-          <GenericText variant="strong" color="red.600">
-            {inv.number}
-          </GenericText>
-        ),
-      },
-      {
-        id: 'createdAt',
-        header: 'Fecha',
-        cell: inv => (
-          <GenericText variant="body">{formatInvoiceCreatedAt(inv.createdAt)}</GenericText>
-        ),
-      },
-      {
-        id: 'totalUsd',
-        header: 'USD',
-        align: 'right',
-        cell: inv => formatUsd(inv.totalUsd),
-      },
-      {
-        id: 'totalBs',
-        header: 'Bs',
-        align: 'right',
-        cell: inv => formatBs(inv.totalBs),
-      },
-      {
-        id: 'lineCount',
-        header: 'Productos',
-        align: 'right',
-        cell: inv => String(inv.lineCount),
-      },
-      {
-        id: 'customer',
-        header: 'Cliente',
-        cell: inv => inv.customerName ?? 'N/A',
-      },
-      {
-        id: 'status',
-        header: 'Estado',
-        cell: inv => <InvoiceStatusBadge status={inv.status} />,
-      },
-    ];
-  }, []);
+  const columns = useMemo(() => buildInvoiceTableColumns({ showCustomer: true }), []);
 
   return (
     <Stack gap={3} flex="1" minH={0} h={0} overflowY="auto">
@@ -131,6 +81,10 @@ export function InvoicesPage() {
         open={detailInvoice != null}
         onClose={closeDetail}
         onDelete={inv => deleteInvoice(inv.id)}
+        onInvoiceUpdated={inv => {
+          setDetailInvoice(inv);
+          void refetch();
+        }}
       />
     </Stack>
   );

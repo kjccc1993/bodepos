@@ -1,4 +1,5 @@
 import { Box, Button, Flex, useBreakpointValue } from '@chakra-ui/react';
+import { FORM_CONTROL_BORDER_RADIUS } from '@/components/ui/form-control-metrics';
 import type { ProductCategory } from '@/lib/types';
 
 type Props = {
@@ -14,17 +15,18 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
 
   return (
     <Box
-      overflowX={{ base: 'auto', md: 'visible' }}
+      className="hide-scrollbar"
+      overflowX="auto"
       overscrollBehaviorX="contain"
       mx={{ base: -1, md: 0 }}
       px={{ base: 1, md: 0 }}
-      py={{ base: 1, md: 2 }}
+      py={{ base: 1, md: 1.5 }}
     >
       <Flex
-        gap={{ base: 2, md: 3 }}
-        w={{ base: 'max-content', md: 'full' }}
-        minW={{ base: 'full', md: 'auto' }}
-        flexWrap={{ base: 'nowrap', md: 'wrap' }}
+        gap={{ base: 1.5, md: 2 }}
+        w="max-content"
+        minW="full"
+        flexWrap="nowrap"
         pb={{ base: 0.5, md: 0 }}
       >
         <FilterChip label="Todas" active={!value} onClick={() => onChange('')} />
@@ -45,13 +47,14 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
   return (
     <Button
       type="button"
-      size={{ base: 'sm', md: 'md' }}
+      size="sm"
       flexShrink={0}
-      borderRadius="full"
+      borderRadius={FORM_CONTROL_BORDER_RADIUS}
       fontWeight="medium"
-      px={{ base: 4, md: 5 }}
-      h={{ base: 8, md: 10 }}
-      minH={{ base: 8, md: 10 }}
+      fontSize={{ base: 'xs', md: 'sm' }}
+      px={{ base: 3, md: 3.5 }}
+      h={7}
+      minH={7}
       borderWidth="1px"
       borderColor={active ? 'brand.500' : 'gray.200'}
       bg={active ? 'brand.500' : 'white'}

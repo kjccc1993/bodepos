@@ -34,6 +34,7 @@ export type Customer = {
   debtUsd: number;
   debtBs: number;
   colorTag: string | null;
+  createdAt: string;
 };
 
 export type CustomerDetail = Customer & {
@@ -102,6 +103,11 @@ export type Invoice = {
   lines: InvoiceLine[];
   createdAt: string;
   payments: InvoicePayments;
+  change?: {
+    usd: number;
+    bs: number;
+    mobileBs: number;
+  };
   creditUsd?: number;
 };
 

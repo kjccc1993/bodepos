@@ -64,7 +64,7 @@ export function ProductSearchWithCategory({
           h="12"
           boxShadow={searchBoxShadow}
         />
-        <Box mt={2}>
+        <Box mt={1.5}>
           <ProductCategoryFilter categories={categories} value={categoryId} onChange={onCategoryChange} />
         </Box>
       </Box>

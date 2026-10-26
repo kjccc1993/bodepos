@@ -59,6 +59,7 @@ export function serializeCustomer(c: Customer, rate: number) {
     debtBs: Math.round(debtUsd * rate * 100) / 100,
     colorTag: c.colorTag,
     isActive: c.isActive,
+    createdAt: c.createdAt.toISOString(),
   };
 }
 

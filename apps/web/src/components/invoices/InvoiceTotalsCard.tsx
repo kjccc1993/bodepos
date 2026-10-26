@@ -79,6 +79,9 @@ function PaymentMetricTile({ metric }: { metric: MetricTile }) {
       px={2}
       py={1.5}
       minH="9"
+      minW={0}
+      w="full"
+      overflow="hidden"
       borderRadius="md"
       borderWidth="1px"
       borderColor={metric.emphasize ? `${colorPalette}.200` : 'gray.200'}
@@ -112,12 +115,27 @@ function PaymentMetricTile({ metric }: { metric: MetricTile }) {
   );
 }
 
-function PaymentMetricsGrid({ metrics }: { metrics: MetricTile[] }) {
+function usedPaymentGridColumns(count: number): string {
+  const n = Math.max(count, 1);
+  if (n === 1) return 'minmax(0, 1fr)';
+  if (n === 2) return 'repeat(2, minmax(0, 1fr))';
+  return 'repeat(3, minmax(0, 1fr))';
+}
+
+function PaymentMetricsGrid({
+  metrics,
+  mode = 'full',
+}: {
+  metrics: MetricTile[];
+  mode?: 'full' | 'used';
+}) {
+  const templateColumns =
+    mode === 'used'
+      ? { md: usedPaymentGridColumns(metrics.length) }
+      : { md: 'repeat(3, minmax(0, 1fr))', xl: 'repeat(6, minmax(0, 1fr))' };
+
   return (
-    <Grid
-      templateColumns={{ md: 'repeat(3, minmax(0, 1fr))', xl: 'repeat(6, minmax(0, 1fr))' }}
-      gap={2}
-    >
+    <Grid templateColumns={templateColumns} gap={2}>
       {metrics.map(metric => (
         <PaymentMetricTile key={metric.id} metric={metric} />
       ))}
@@ -267,7 +285,7 @@ export function InvoiceTotalsCard({
             </Stack>
           </Box>
           <Box display={{ base: 'none', md: 'block' }} px={3} py={2} bg="surface.page">
-            <PaymentMetricsGrid metrics={usedMetrics} />
+            <PaymentMetricsGrid metrics={usedMetrics} mode="used" />
           </Box>
         </>
       )}
@@ -312,7 +330,7 @@ export function InvoiceTotalsCard({
             </Grid>
           </Box>
           <Box display={{ base: 'none', md: 'block' }} px={3} py={2} bg="surface.page">
-            <PaymentMetricsGrid metrics={fullMetrics} />
+            <PaymentMetricsGrid metrics={fullMetrics} mode="full" />
           </Box>
         </>
       )}

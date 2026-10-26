@@ -56,6 +56,27 @@ export function profitMarkupPercent(costUsd: number, priceUsd: number): number |
   return roundUsd(((price - cost) / cost) * 100);
 }
 
+/** Precio de venta a partir de costo y % de ganancia sobre costo. */
+export function priceUsdFromProfitMarkupPercent(costUsd: number, profitPercent: number): number {
+  const cost = roundUsd(costUsd);
+  const pct = roundUsd(profitPercent);
+  if (cost <= 0 || !Number.isFinite(cost) || !Number.isFinite(pct)) return 0;
+  return roundUsd(cost * (1 + pct / 100));
+}
+
+export function parseSignedDecimalAmount(raw: string): number {
+  const trimmed = raw.trim();
+  const negative = trimmed.startsWith('-');
+  const n = parseMoneyAmount(negative ? trimmed.slice(1) : trimmed);
+  return negative ? -n : n;
+}
+
+/** Valor para input de porcentaje (coma decimal). */
+export function formatPercentInput(n: number): string {
+  if (!Number.isFinite(n)) return '';
+  return String(roundUsd(n)).replace('.', ',');
+}
+
 export function formatProfitMarkupPercent(costUsd: number, priceUsd: number): string {
   const pct = profitMarkupPercent(costUsd, priceUsd);
   if (pct == null) return '—';

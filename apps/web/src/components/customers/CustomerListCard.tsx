@@ -2,6 +2,7 @@ import { Box, Flex } from '@chakra-ui/react';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { GenericText } from '@/components/ui';
+import { formatCustomerSinceShort } from '@/lib/customers/format';
 import { formatBs, formatUsd } from '@/lib/money';
 import type { Customer } from '@/lib/types';
 
@@ -39,6 +40,9 @@ export function CustomerListCard({ customer, onOpen }: Props) {
         <Box flex="1" minW={0}>
           <GenericText variant="strong" fontSize="sm" lineClamp={1}>
             {customer.name}
+          </GenericText>
+          <GenericText variant="caption" fontSize="xs" mt={0.5} lineClamp={1}>
+            Cliente desde {formatCustomerSinceShort(customer.createdAt)}
           </GenericText>
           <GenericText
             variant="body"

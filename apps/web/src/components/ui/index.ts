@@ -4,6 +4,7 @@ export { GenericSearchInput, type GenericSearchInputProps } from '@/components/u
 export { GenericPasswordInput, type GenericPasswordInputProps } from '@/components/ui/input/GenericPasswordInput';
 export { GenericDatePicker, type GenericDatePickerProps, type DateRangeFormValue } from '@/components/ui/date-picker/GenericDatePicker';
 export { MoneyAmountInput } from '@/components/ui/input/MoneyAmountInput';
+export { ProfitPercentInput } from '@/components/ui/input/ProfitPercentInput';
 export { GenericSelect, type SelectOption } from '@/components/ui/select/GenericSelect';
 export { GenericText, type GenericTextProps, type GenericTextVariant } from '@/components/ui/text/GenericText';
 export { GenericHeading, type GenericHeadingProps } from '@/components/ui/heading/GenericHeading';
