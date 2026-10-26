@@ -1,6 +1,7 @@
 import { Box, IconButton } from '@chakra-ui/react';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useState } from 'react';
 import { GenericInput, type GenericInputProps } from '@/components/ui/input/GenericInput';
 
 export type GenericSearchInputProps = Omit<GenericInputProps, 'value' | 'onChange'> & {
@@ -8,16 +9,42 @@ export type GenericSearchInputProps = Omit<GenericInputProps, 'value' | 'onChang
   onChange: (value: string) => void;
 };
 
-export function GenericSearchInput({ value, onChange, ...props }: GenericSearchInputProps) {
+/** Evita autofill de contraseñas / tarjetas en buscadores (Safari iOS, Chrome). */
+const searchAutofillProps = {
+  type: 'search' as const,
+  name: 'bodepos-catalog-search',
+  autoComplete: 'off',
+  autoCorrect: 'off',
+  autoCapitalize: 'off',
+  spellCheck: false,
+  enterKeyHint: 'search' as const,
+  role: 'searchbox' as const,
+  'data-1p-ignore': true,
+  'data-lpignore': 'true',
+  'data-form-type': 'other',
+};
+
+export function GenericSearchInput({ value, onChange, onFocus, onBlur, ...props }: GenericSearchInputProps) {
   const showClear = value.length > 0;
+  const [blockAutofill, setBlockAutofill] = useState(true);
 
   return (
     <Box position="relative" w="full">
       <GenericInput
+        {...props}
+        {...searchAutofillProps}
         value={value}
         onChange={e => onChange(e.target.value)}
         pe={showClear ? 10 : undefined}
-        {...props}
+        readOnly={blockAutofill}
+        onFocus={e => {
+          setBlockAutofill(false);
+          onFocus?.(e);
+        }}
+        onBlur={e => {
+          setBlockAutofill(true);
+          onBlur?.(e);
+        }}
       />
       {showClear ? (
         <IconButton
