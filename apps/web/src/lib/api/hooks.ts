@@ -122,13 +122,6 @@ export function useInvoiceSummary(date: string) {
   });
 }
 
-export function useDailyIncomes() {
-  return useQuery({
-    queryKey: ['daily-incomes'],
-    queryFn: () => apiFetch<unknown[]>('/daily-incomes'),
-  });
-}
-
 export function useUpdateStoreSettings() {
   const qc = useQueryClient();
   return useMutation({

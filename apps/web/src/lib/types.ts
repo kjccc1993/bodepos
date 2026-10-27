@@ -27,6 +27,25 @@ export type ProductsListPage = {
   hasMore: boolean;
 };
 
+export type DailyIncome = {
+  id: string;
+  date: string;
+  usdCash: number;
+  cashBs: number;
+  posBs: number;
+  pos2Bs: number;
+  mobileBs: number;
+  biopagoBs: number;
+  totalUsd: number;
+  totalBs: number;
+};
+
+export type DailyIncomesListPage = {
+  items: DailyIncome[];
+  total: number;
+  hasMore: boolean;
+};
+
 export type Customer = {
   id: string;
   name: string;

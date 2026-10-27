@@ -26,6 +26,7 @@ import {
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
 import { apiFetch } from '@/lib/http/client';
+import { headerCreateButtonProps } from '@/lib/design/surface-styles';
 
 const UNIT_OPTIONS: SelectOption[] = [
   { value: 'UNIT', label: 'Unidad' },
@@ -82,8 +83,6 @@ export function ProductsPage() {
         <Flex justify="space-between" align="center" gap={2}>
           <GenericHeading>Mis productos</GenericHeading>
           <Button
-            size="sm"
-            colorPalette="green"
             flexShrink={0}
             onClick={() =>
               openProductForm({
@@ -94,8 +93,9 @@ export function ProductsPage() {
                 categoryId: defaultCategoryId,
               })
             }
+            {...headerCreateButtonProps}
           >
-            Nuevo
+            Nuevo producto
           </Button>
         </Flex>
       </Box>

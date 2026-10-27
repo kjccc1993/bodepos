@@ -109,8 +109,16 @@ export type NavIconId =
   | 'customers'
   | 'more';
 
-export function NavIcon({ id, active }: { id: NavIconId; active: boolean }) {
-  const color = active ? '#111827' : '#6B7280';
+export function NavIcon({
+  id,
+  active,
+  activeColor = '#111827',
+}: {
+  id: NavIconId;
+  active: boolean;
+  activeColor?: string;
+}) {
+  const color = active ? activeColor : '#6B7280';
   const props = { size: 22, color };
   switch (id) {
     case 'sell':

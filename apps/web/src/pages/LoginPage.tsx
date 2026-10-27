@@ -9,8 +9,8 @@ export function LoginPage() {
   const { login } = useAuth();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

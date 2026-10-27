@@ -5,7 +5,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { NavIcon, type NavIconId } from '@/components/nav/NavIcons';
 import { SidebarAccountingNav } from '@/components/nav/SidebarAccountingNav';
 import { SidebarUserBlock } from '@/components/nav/SidebarUserBlock';
-import { isAccountingPath } from '@/lib/nav/accounting-nav';
+import { isAccountingNavLinkActive, isAccountingPath } from '@/lib/nav/accounting-nav';
 import { useLogout } from '@/lib/auth/useLogout';
 import { useBcvRateSync, useCatalogBackgroundSync } from '@/lib/api/hooks';
 import { navItemActiveProps, navItemIdleProps, sidebarChromeProps } from '@/lib/design/surface-styles';
@@ -18,8 +18,23 @@ const tabs: { to: string; label: string; mobileLabel: string; icon: NavIconId }[
   { to: '/accounting', label: 'Contabilidad', mobileLabel: 'Contabilidad', icon: 'accounting' },
 ];
 
+const mobileBottomTabs: { to: string; label: string; icon: NavIconId }[] = [
+  { to: '/sell', label: 'Vender', icon: 'sell' },
+  { to: '/products', label: 'Productos', icon: 'products' },
+  { to: '/accounting/invoices', label: 'Facturas', icon: 'invoices' },
+  { to: '/accounting/daily-incomes', label: 'Ingresos', icon: 'dailyIncomes' },
+  { to: '/accounting/customers', label: 'Clientes', icon: 'customers' },
+];
+
+const MOBILE_NAV_BRAND = '#FF782D';
+
 function isTabActive(pathname: string, to: string) {
   if (to === '/accounting') return isAccountingPath(pathname);
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+function isMobileBottomTabActive(pathname: string, to: string) {
+  if (to.startsWith('/accounting')) return isAccountingNavLinkActive(pathname, to);
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
@@ -27,77 +42,98 @@ function BottomNav({ pathname }: { pathname: string }) {
   const navigate = useNavigate();
 
   return (
-    <Flex
+    <Box
       as="nav"
       aria-label="Menú inferior"
-      display={{ base: 'flex', lg: 'none' }}
+      display={{ base: 'block', lg: 'none' }}
       position="fixed"
       bottom={0}
       left={0}
       right={0}
-      bg="white"
-      borderTopWidth="1px"
-      borderColor="gray.200"
-      boxShadow="0 -2px 12px rgba(15, 23, 42, 0.04)"
       zIndex={10}
-      px={1}
-      pt={1}
-      pb="max(0.35rem, env(safe-area-inset-bottom))"
-      justify="space-between"
-      gap={0.5}
+      px={3}
+      pb="max(0.75rem, env(safe-area-inset-bottom))"
+      pointerEvents="none"
     >
-      {tabs.map(tab => {
-        const active = isTabActive(pathname, tab.to);
-        return (
-          <button
-            key={tab.to}
-            type="button"
-            aria-current={active ? 'page' : undefined}
-            onClick={() => {
-              if (active) return;
-              startTransition(() => navigate(tab.to));
-            }}
-            style={{
-              flex: 1,
-              minWidth: 0,
-              border: 0,
-              background: 'transparent',
-              padding: 0,
-              cursor: 'pointer',
-            }}
-          >
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              gap={0.5}
-              minH="14"
-              py={1}
-              px={0.5}
-              borderRadius="lg"
-              w="full"
-              {...(active ? navItemActiveProps : navItemIdleProps)}
-              transition="background 0.15s ease, border-color 0.15s ease"
-              _active={{ bg: 'gray.100' }}
-            >
-              <Box lineHeight={0}>
-                <NavIcon id={tab.icon} active={active} />
-              </Box>
-              <Text
-                fontSize="2xs"
-                fontWeight={active ? 'bold' : 'medium'}
-                lineHeight="1.1"
-                textAlign="center"
-                lineClamp={1}
-                w="full"
+      <Flex
+        bg="white"
+        borderRadius="2xl"
+        borderWidth="1px"
+        borderColor="gray.200"
+        boxShadow="lift"
+        px={1}
+        py={1.5}
+        justify="space-between"
+        gap={0}
+        pointerEvents="auto"
+      >
+        {mobileBottomTabs.map(tab => {
+          const active = isMobileBottomTabActive(pathname, tab.to);
+          return (
+            <Box key={tab.to} position="relative" flex={1} minW={0}>
+              {active && (
+                <Box
+                  position="absolute"
+                  top={0}
+                  left="50%"
+                  transform="translateX(-50%)"
+                  w="7"
+                  h="0.5"
+                  borderRadius="full"
+                  bg="brand.500"
+                  zIndex={1}
+                  aria-hidden
+                />
+              )}
+              <button
+                type="button"
+                aria-current={active ? 'page' : undefined}
+                onClick={() => {
+                  if (active) return;
+                  startTransition(() => navigate(tab.to));
+                }}
+                style={{
+                  width: '100%',
+                  minWidth: 0,
+                  border: 0,
+                  background: 'transparent',
+                  padding: 0,
+                  cursor: 'pointer',
+                }}
               >
-                {tab.mobileLabel}
-              </Text>
-            </Flex>
-          </button>
-        );
-      })}
-    </Flex>
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  gap={0.5}
+                  minH="12"
+                  py={1}
+                  px={0.5}
+                  w="full"
+                  color={active ? 'brand.600' : 'gray.500'}
+                  transition="color 0.15s ease"
+                  _active={{ opacity: 0.85 }}
+                >
+                  <Box lineHeight={0}>
+                    <NavIcon id={tab.icon} active={active} activeColor={MOBILE_NAV_BRAND} />
+                  </Box>
+                  <Text
+                    fontSize="2xs"
+                    fontWeight={active ? 'bold' : 'medium'}
+                    lineHeight="1.1"
+                    textAlign="center"
+                    lineClamp={1}
+                    w="full"
+                  >
+                    {tab.label}
+                  </Text>
+                </Flex>
+              </button>
+            </Box>
+          );
+        })}
+      </Flex>
+    </Box>
   );
 }
 
@@ -246,11 +282,11 @@ export function PosShell() {
           pb={
             isTradeView
               ? {
-                  base: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+                  base: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))',
                   lg: 0,
                 }
               : {
-                  base: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+                  base: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))',
                   lg: 4,
                 }
           }

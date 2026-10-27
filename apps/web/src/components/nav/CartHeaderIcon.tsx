@@ -15,9 +15,9 @@ export function CartHeaderIcon({ itemCount }: { itemCount: number }) {
         justify="center"
         position="relative"
         flexShrink={0}
-        w="8"
-        h="8"
-        minW="8"
+        w="9"
+        h="9"
+        minW="9"
         borderRadius="lg"
         borderWidth="1px"
         borderColor={active ? 'green.200' : 'gray.200'}
@@ -27,14 +27,14 @@ export function CartHeaderIcon({ itemCount }: { itemCount: number }) {
         _hover={{ bg: active ? 'green.100' : 'gray.50' }}
         _active={{ bg: active ? 'green.100' : 'gray.100' }}
       >
-        <NavIconCart size={18} color={active ? '#16a34a' : '#64748b'} />
+        <NavIconCart size={20} color={active ? '#16a34a' : '#64748b'} />
         {itemCount > 0 && (
           <Flex
             position="absolute"
             top="-1"
             right="-1"
-            minW={badgeWide ? '4' : '4'}
-            h="4"
+            minW={badgeWide ? '4.5' : '4.5'}
+            h="4.5"
             px={badgeWide ? 0.5 : 0}
             borderRadius="full"
             bg="green.600"

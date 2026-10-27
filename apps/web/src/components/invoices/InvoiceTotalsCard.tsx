@@ -1,18 +1,8 @@
-import {
-  faCoins,
-  faCreditCard,
-  faDollarSign,
-  faFingerprint,
-  faHandHoldingDollar,
-  faMobileScreenButton,
-  faMoneyBillWave,
-  type IconDefinition,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Flex, Grid, Stack } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
+import { PaymentAmountsSection } from '@/components/payments/PaymentAmountsSection';
+import type { PaymentMetricTileData } from '@/components/payments/PaymentMetricTile';
+import { DaySummaryCardShell } from '@/components/ui/DaySummaryCardShell';
 import { SummaryAmountHeader } from '@/components/ui/SummaryAmountCard';
-import { GenericText } from '@/components/ui';
 import type { InvoiceTotalsBreakdown } from '@/lib/invoices/totals';
 import { formatBs, formatUsd, roundUsd } from '@/lib/money';
 
@@ -20,128 +10,7 @@ function isZero(n: number) {
   return roundUsd(n) <= 0;
 }
 
-const PAYMENT_META: Record<
-  string,
-  { icon: IconDefinition; colorPalette: 'green' | 'brand' | 'purple' | 'blue' | 'cyan' | 'orange' }
-> = {
-  usd: { icon: faDollarSign, colorPalette: 'green' },
-  cashBs: { icon: faMoneyBillWave, colorPalette: 'brand' },
-  biopago: { icon: faFingerprint, colorPalette: 'purple' },
-  pos: { icon: faCreditCard, colorPalette: 'blue' },
-  mobile: { icon: faMobileScreenButton, colorPalette: 'cyan' },
-  credit: { icon: faHandHoldingDollar, colorPalette: 'orange' },
-  totalBs: { icon: faCoins, colorPalette: 'green' },
-};
-
-type MetricTile = {
-  id: string;
-  label: string;
-  value: string;
-  muted: boolean;
-  emphasize?: boolean;
-};
-
-function SummaryLine({
-  label,
-  value,
-  muted,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
-  return (
-    <Flex justify="space-between" align="center" gap={2} minW={0} py={0.5}>
-      <GenericText variant="caption" color="gray.600" truncate>
-        {label}
-      </GenericText>
-      <GenericText
-        variant="body"
-        fontSize="xs"
-        flexShrink={0}
-        color={muted ? 'gray.400' : 'gray.900'}
-        fontWeight={muted ? 'normal' : 'medium'}
-      >
-        {value}
-      </GenericText>
-    </Flex>
-  );
-}
-
-function PaymentMetricTile({ metric }: { metric: MetricTile }) {
-  const meta = PAYMENT_META[metric.id] ?? PAYMENT_META.usd;
-  const { icon, colorPalette } = meta;
-
-  return (
-    <Flex
-      align="center"
-      gap={2}
-      px={2}
-      py={1.5}
-      minH="9"
-      minW={0}
-      w="full"
-      overflow="hidden"
-      borderRadius="md"
-      borderWidth="1px"
-      borderColor={metric.emphasize ? `${colorPalette}.200` : 'gray.200'}
-      bg={metric.muted ? 'gray.50' : metric.emphasize ? `${colorPalette}.50` : 'white'}
-      boxShadow={metric.emphasize ? '0 1px 2px rgba(15, 23, 42, 0.04)' : 'none'}
-    >
-      <Flex
-        boxSize={7}
-        flexShrink={0}
-        borderRadius="md"
-        bg={`${colorPalette}.100`}
-        color={`${colorPalette}.700`}
-        align="center"
-        justify="center"
-      >
-        <FontAwesomeIcon icon={icon} style={{ width: '0.75rem', height: '0.75rem' }} />
-      </Flex>
-      <GenericText variant="caption" color="gray.600" lineClamp={1} flex="1" minW={0} fontSize="xs">
-        {metric.label}
-      </GenericText>
-      <GenericText
-        variant="strong"
-        fontSize="xs"
-        fontVariantNumeric="tabular-nums"
-        flexShrink={0}
-        color={metric.muted ? 'gray.400' : 'gray.900'}
-      >
-        {metric.value}
-      </GenericText>
-    </Flex>
-  );
-}
-
-function usedPaymentGridColumns(count: number): string {
-  const n = Math.max(count, 1);
-  if (n === 1) return 'minmax(0, 1fr)';
-  if (n === 2) return 'repeat(2, minmax(0, 1fr))';
-  return 'repeat(3, minmax(0, 1fr))';
-}
-
-function PaymentMetricsGrid({
-  metrics,
-  mode = 'full',
-}: {
-  metrics: MetricTile[];
-  mode?: 'full' | 'used';
-}) {
-  const templateColumns =
-    mode === 'used'
-      ? { md: usedPaymentGridColumns(metrics.length) }
-      : { md: 'repeat(3, minmax(0, 1fr))', xl: 'repeat(6, minmax(0, 1fr))' };
-
-  return (
-    <Grid templateColumns={templateColumns} gap={2}>
-      {metrics.map(metric => (
-        <PaymentMetricTile key={metric.id} metric={metric} />
-      ))}
-    </Grid>
-  );
-}
+type MetricTile = PaymentMetricTileData & { muted: boolean };
 
 type PaymentLine = { id: string; label: string; value: string };
 
@@ -259,14 +128,7 @@ export function InvoiceTotalsCard({
   const usedMetrics = usedLinesToMetrics(usedLines);
 
   return (
-    <Box
-      bg="white"
-      borderRadius={{ base: 'md', md: 'xl' }}
-      borderWidth="1px"
-      borderColor="gray.200"
-      boxShadow={{ base: 'none', md: 'soft' }}
-      overflow="hidden"
-    >
+    <DaySummaryCardShell>
       <SummaryAmountHeader
         label="Total facturado"
         amountUsd={breakdown.totalUsd}
@@ -275,65 +137,11 @@ export function InvoiceTotalsCard({
         footerBorder={showBreakdown}
       />
 
-      {showBreakdown && paymentsMode === 'used' && (
-        <>
-          <Box display={{ base: 'block', md: 'none' }} px={3} py={2.5}>
-            <Stack gap={0}>
-              {usedLines.map(line => (
-                <SummaryLine key={line.id} label={line.label} value={line.value} />
-              ))}
-            </Stack>
-          </Box>
-          <Box display={{ base: 'none', md: 'block' }} px={3} py={2} bg="surface.page">
-            <PaymentMetricsGrid metrics={usedMetrics} mode="used" />
-          </Box>
-        </>
-      )}
-
-      {showBreakdown && paymentsMode === 'full' && (
-        <>
-          <Box display={{ base: 'block', md: 'none' }} px={3} py={2.5}>
-            <Grid templateColumns="1fr 1fr" gap={3}>
-              <Stack gap={0}>
-                <SummaryLine
-                  label="USD"
-                  value={formatUsd(breakdown.usdCash)}
-                  muted={isZero(breakdown.usdCash)}
-                />
-                <SummaryLine
-                  label="Bs Efectivo"
-                  value={formatBs(breakdown.cashBs)}
-                  muted={isZero(breakdown.cashBs)}
-                />
-                <SummaryLine
-                  label="Biopago"
-                  value={formatBs(breakdown.biopagoBs)}
-                  muted={isZero(breakdown.biopagoBs)}
-                />
-                {credit > 0 && (
-                  <SummaryLine label="Fiado" value={formatUsd(credit)} muted={false} />
-                )}
-              </Stack>
-              <Stack gap={0}>
-                <SummaryLine label="POS" value={formatBs(posTotal)} muted={isZero(posTotal)} />
-                <SummaryLine
-                  label="Pago móvil"
-                  value={formatBs(breakdown.mobileBs)}
-                  muted={isZero(breakdown.mobileBs)}
-                />
-                <SummaryLine
-                  label="Total Bs"
-                  value={formatBs(breakdown.totalBs)}
-                  muted={isZero(breakdown.totalBs)}
-                />
-              </Stack>
-            </Grid>
-          </Box>
-          <Box display={{ base: 'none', md: 'block' }} px={3} py={2} bg="surface.page">
-            <PaymentMetricsGrid metrics={fullMetrics} mode="full" />
-          </Box>
-        </>
-      )}
-    </Box>
+      {showBreakdown ? (
+        <PaymentAmountsSection
+          metrics={paymentsMode === 'full' ? fullMetrics : usedMetrics}
+        />
+      ) : null}
+    </DaySummaryCardShell>
   );
 }

@@ -1,6 +1,7 @@
 import { Box, Flex } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { GenericText } from '@/components/ui';
+import { DaySummaryCardShell } from '@/components/ui/DaySummaryCardShell';
 import { formatBs, formatUsd } from '@/lib/money';
 
 type SummaryAmountHeaderProps = {
@@ -8,6 +9,7 @@ type SummaryAmountHeaderProps = {
   amountUsd: number;
   amountBs: number;
   headerRight?: ReactNode;
+  trailingActions?: ReactNode;
   footerBorder?: boolean;
 };
 
@@ -16,6 +18,7 @@ export function SummaryAmountHeader({
   amountUsd,
   amountBs,
   headerRight,
+  trailingActions,
   footerBorder = false,
 }: SummaryAmountHeaderProps) {
   return (
@@ -27,24 +30,33 @@ export function SummaryAmountHeader({
       borderColor="gray.100"
     >
       <Flex justify="space-between" align="center" gap={2}>
-        <GenericText variant="label" fontSize="xs">
-          {label}
-        </GenericText>
-        {headerRight != null && headerRight !== '' ? (
-          <GenericText variant="caption">{headerRight}</GenericText>
+        <Box flex="1" minW={0}>
+          <Flex justify="space-between" align="center" gap={2}>
+            <GenericText variant="label" fontSize="xs">
+              {label}
+            </GenericText>
+            {headerRight != null && headerRight !== '' ? (
+              <GenericText variant="caption">{headerRight}</GenericText>
+            ) : null}
+          </Flex>
+          <GenericText variant="price" fontSize={{ base: 'md', md: 'lg' }} mt={1} lineHeight="short">
+            {formatUsd(amountUsd)} · {formatBs(amountBs)}
+          </GenericText>
+        </Box>
+        {trailingActions != null ? (
+          <Flex flexShrink={0} gap="10px" align="stretch" alignSelf="center">
+            {trailingActions}
+          </Flex>
         ) : null}
       </Flex>
-      <GenericText variant="price" fontSize={{ base: 'md', md: 'lg' }} mt={1} lineHeight="short">
-        {formatUsd(amountUsd)} · {formatBs(amountBs)}
-      </GenericText>
     </Box>
   );
 }
 
 export function SummaryAmountCard(props: SummaryAmountHeaderProps) {
   return (
-    <Box bg="white" borderRadius="xl" borderWidth="1px" borderColor="gray.200" boxShadow="soft" overflow="hidden">
+    <DaySummaryCardShell>
       <SummaryAmountHeader {...props} />
-    </Box>
+    </DaySummaryCardShell>
   );
 }

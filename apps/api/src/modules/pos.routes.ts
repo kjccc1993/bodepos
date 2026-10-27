@@ -431,6 +431,26 @@ function dayRange(dateStr: string): { start: Date; end: Date } {
   return { start, end };
 }
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseIsoDateOnly(value: unknown, label: string): Date {
+  if (typeof value !== 'string' || !ISO_DATE_RE.test(value)) {
+    throw new AppError(422, 'VALIDATION_ERROR', `${label} inválida`);
+  }
+  return new Date(`${value}T12:00:00.000Z`);
+}
+
+function dailyIncomeDateWhere(fromRaw: unknown, toRaw: unknown): Prisma.DailyIncomeWhereInput['date'] | undefined {
+  const parts: Prisma.DateTimeFilter = {};
+  if (fromRaw !== undefined && fromRaw !== '') {
+    parts.gte = parseIsoDateOnly(fromRaw, 'Fecha desde');
+  }
+  if (toRaw !== undefined && toRaw !== '') {
+    parts.lte = parseIsoDateOnly(toRaw, 'Fecha hasta');
+  }
+  return Object.keys(parts).length > 0 ? parts : undefined;
+}
+
 posRouter.get(
   '/invoices/summary',
   asyncHandler(async (req, res) => {
@@ -570,40 +590,101 @@ posRouter.get(
   '/daily-incomes',
   asyncHandler(async (req, res) => {
     const { storeId } = requireStore(req);
-    const rows = await prisma.dailyIncome.findMany({
-      where: { storeId },
-      orderBy: { date: 'desc' },
-      take: 30,
+    const dateFilter = dailyIncomeDateWhere(req.query.from, req.query.to);
+    const where: Prisma.DailyIncomeWhereInput = { storeId, ...(dateFilter ? { date: dateFilter } : {}) };
+    const listArgs = { where, orderBy: { date: 'desc' as const } };
+    const rawLimit = Number(req.query.limit);
+    const rawOffset = Number(req.query.offset);
+    const usePagination = Number.isFinite(rawLimit) || Number.isFinite(rawOffset);
+    if (!usePagination) {
+      const rows = await prisma.dailyIncome.findMany(listArgs);
+      res.json(rows.map(serializeDailyIncome));
+      return;
+    }
+    const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 36, 1), 100);
+    const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
+    const [rows, total] = await Promise.all([
+      prisma.dailyIncome.findMany({ ...listArgs, take: limit, skip: offset }),
+      prisma.dailyIncome.count({ where }),
+    ]);
+    res.json({
+      items: rows.map(serializeDailyIncome),
+      total,
+      hasMore: offset + rows.length < total,
     });
-    res.json(rows.map(serializeDailyIncome));
   }),
 );
+
+const dailyIncomeAmountsSchema = z.object({
+  usdCash: z.number(),
+  cashBs: z.number(),
+  posBs: z.number(),
+  pos2Bs: z.number(),
+  mobileBs: z.number(),
+  biopagoBs: z.number(),
+  totalUsd: z.number(),
+  totalBs: z.number(),
+});
+
+const dailyIncomeCreateSchema = dailyIncomeAmountsSchema.extend({
+  date: z.string(),
+});
 
 posRouter.post(
   '/daily-incomes',
   asyncHandler(async (req, res) => {
     const { storeId } = requireStore(req);
-    const schema = z.object({
-      date: z.string(),
-      usdCash: z.number(),
-      cashBs: z.number(),
-      posBs: z.number(),
-      pos2Bs: z.number(),
-      mobileBs: z.number(),
-      biopagoBs: z.number(),
-      totalUsd: z.number(),
-      totalBs: z.number(),
-    });
-    const parsed = schema.safeParse(req.body);
+    const parsed = dailyIncomeCreateSchema.safeParse(req.body);
     if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Ingreso inválido');
-    const date = new Date(`${parsed.data.date}T12:00:00.000Z`);
-    const { date: dateStr, ...amounts } = parsed.data;
-    const row = await prisma.dailyIncome.upsert({
+    const date = parseIsoDateOnly(parsed.data.date, 'Fecha');
+    const { date: _dateStr, ...amounts } = parsed.data;
+    const existing = await prisma.dailyIncome.findUnique({
       where: { storeId_date: { storeId, date } },
-      create: { storeId, date, ...amounts },
-      update: { ...amounts },
     });
-    res.json(serializeDailyIncome(row));
+    if (existing) {
+      throw new AppError(409, 'DAILY_INCOME_EXISTS', 'Ya existe un ingreso registrado para esta fecha');
+    }
+    const row = await prisma.dailyIncome.create({ data: { storeId, date, ...amounts } });
+    res.status(201).json(serializeDailyIncome(row));
+  }),
+);
+
+posRouter.put(
+  '/daily-incomes/:date',
+  asyncHandler(async (req, res) => {
+    const { storeId } = requireStore(req);
+    const date = parseIsoDateOnly(req.params.date, 'Fecha');
+    const parsed = dailyIncomeAmountsSchema.safeParse(req.body);
+    if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Ingreso inválido');
+    try {
+      const row = await prisma.dailyIncome.update({
+        where: { storeId_date: { storeId, date } },
+        data: parsed.data,
+      });
+      res.json(serializeDailyIncome(row));
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+        throw new AppError(404, 'NOT_FOUND', 'Ingreso no encontrado');
+      }
+      throw e;
+    }
+  }),
+);
+
+posRouter.delete(
+  '/daily-incomes/:date',
+  asyncHandler(async (req, res) => {
+    const { storeId } = requireStore(req);
+    const date = parseIsoDateOnly(req.params.date, 'Fecha');
+    try {
+      await prisma.dailyIncome.delete({ where: { storeId_date: { storeId, date } } });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+        throw new AppError(404, 'NOT_FOUND', 'Ingreso no encontrado');
+      }
+      throw e;
+    }
+    res.status(204).end();
   }),
 );
 

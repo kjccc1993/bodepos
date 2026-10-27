@@ -1,5 +1,5 @@
 import { Button, DatePicker, mergeRefs, Portal } from '@chakra-ui/react';
-import { getLocalTimeZone, parseDate, type DateValue } from '@internationalized/date';
+import { parseDate, type DateValue } from '@internationalized/date';
 import type { ComponentProps, ReactNode, Ref } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -8,7 +8,7 @@ import {
   resolveDisabledFieldTriggerProps,
 } from '@/components/ui/field-disabled-styles';
 import { resolveFormControlHeight } from '@/components/ui/form-control-metrics';
-import { todayInVenezuela, VENEZUELA_TIME_ZONE } from '@/lib/utils/calendar';
+import { formatCalendarDateInTimeZone, todayInVenezuela, VENEZUELA_TIME_ZONE } from '@/lib/utils/calendar';
 
 export type DateRangeFormValue = {
   start: string | null;
@@ -52,7 +52,7 @@ export type GenericDatePickerProps =
 
 function toIsoDateString(input: string | Date): string {
   if (typeof input === 'string') return input;
-  return input.toISOString().slice(0, 10);
+  return formatCalendarDateInTimeZone(input, VENEZUELA_TIME_ZONE);
 }
 
 function toDateValueBoundary(input: string | Date | undefined): DateValue | undefined {
@@ -105,7 +105,7 @@ export function GenericDatePicker(props: GenericDatePickerProps) {
     'aria-label': ariaLabel,
   } = props;
 
-  const timeZone = timeZoneProp ?? (defaultToday ? VENEZUELA_TIME_ZONE : getLocalTimeZone());
+  const timeZone = timeZoneProp ?? VENEZUELA_TIME_ZONE;
   const startOfWeek = locale.startsWith('es') ? 1 : 0;
   const triggerHeight = resolveFormControlHeight(size);
 
@@ -217,8 +217,12 @@ export function GenericDatePicker(props: GenericDatePickerProps) {
     (props as Extract<GenericDatePickerProps, { mode?: 'single' }>).onChange?.(raw[0]?.toString() ?? null);
   };
 
+  const width = w ?? 'full';
+
   return (
     <DatePicker.Root
+      w={width}
+      minW={0}
       size={size}
       selectionMode={isRange ? 'range' : 'single'}
       min={min}
@@ -238,7 +242,7 @@ export function GenericDatePicker(props: GenericDatePickerProps) {
     >
       {label ? <DatePicker.Label>{label}</DatePicker.Label> : null}
 
-      <DatePicker.Control w={w ?? 'full'} minW={0} display="flex" alignItems="stretch" overflow="hidden">
+      <DatePicker.Control w={width} minW={0} display="flex" alignItems="stretch" overflow="hidden">
         <DatePicker.Trigger asChild flex="1" minW={0}>
           <Button
             ref={triggerRefMerged}

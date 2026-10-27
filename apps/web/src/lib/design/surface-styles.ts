@@ -76,6 +76,15 @@ export const primarySolidButtonProps = {
   borderRadius: 'xl',
 } as const;
 
+/** CTA de cabecera para abrir flujos de creación/registro (verde). */
+export const headerCreateButtonProps = {
+  ...primarySolidButtonProps,
+  size: 'sm' as const,
+  borderRadius: 'lg',
+  fontWeight: 'medium',
+  px: '4',
+} as const;
+
 /** Botón sólido secundario (naranja RestroBit). */
 export const secondarySolidButtonProps = {
   colorPalette: 'brand',
@@ -102,8 +111,9 @@ export const paymentHelperButtonProps = {
 } as const;
 
 /** Icon-only outline (estilo “Draft List”, sin texto). */
-export function outlineIconButtonProps(tone: 'primary' | 'secondary') {
-  const isPrimary = tone === 'primary';
+export function outlineIconButtonProps(tone: 'primary' | 'secondary' | 'danger') {
+  const color =
+    tone === 'primary' ? 'green' : tone === 'danger' ? 'red' : 'brand';
   return {
     variant: 'outline' as const,
     bg: 'white',
@@ -111,13 +121,13 @@ export function outlineIconButtonProps(tone: 'primary' | 'secondary') {
     borderColor: 'gray.200',
     borderRadius: 'md',
     boxShadow: 'none',
-    color: isPrimary ? 'green.600' : 'brand.600',
+    color: `${color}.600`,
     _hover: {
-      bg: isPrimary ? 'green.50' : 'brand.50',
-      borderColor: isPrimary ? 'green.300' : 'brand.300',
+      bg: `${color}.50`,
+      borderColor: `${color}.300`,
     },
     _active: {
-      bg: isPrimary ? 'green.100' : 'brand.100',
+      bg: `${color}.100`,
     },
   };
 }

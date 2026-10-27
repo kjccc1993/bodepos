@@ -1,5 +1,7 @@
+import { todayInVenezuela } from '@/lib/utils/calendar';
+
 export function formatInvoiceFilterDate(dateStr: string): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInVenezuela();
   const d = new Date(`${dateStr}T12:00:00`);
   const short = d.toLocaleDateString('es-VE', {
     day: '2-digit',

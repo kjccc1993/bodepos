@@ -12,6 +12,7 @@ import {
   type DataTableColumn,
 } from '@/components/ui';
 import { useCustomers } from '@/lib/api/hooks';
+import { headerCreateButtonProps } from '@/lib/design/surface-styles';
 import { formatCustomerSince } from '@/lib/customers/format';
 import { formatBs, formatUsd } from '@/lib/money';
 import type { Customer } from '@/lib/types';
@@ -94,8 +95,8 @@ export function CustomersPage() {
           <GenericHeading flex="1" minW={0}>
             Clientes
           </GenericHeading>
-          <Button size="sm" colorPalette="green" flexShrink={0} onClick={() => setCreateOpen(true)}>
-            Nuevo
+          <Button flexShrink={0} onClick={() => setCreateOpen(true)} {...headerCreateButtonProps}>
+            Nuevo cliente
           </Button>
         </Flex>
       </Box>

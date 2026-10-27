@@ -12,12 +12,12 @@ import {
 import { buildInvoiceTableColumns } from '@/lib/invoices/table-columns';
 import { useInvoiceSummary, useInvoices } from '@/lib/api/hooks';
 import { formatInvoiceFilterDate } from '@/lib/invoices/format';
-import { VENEZUELA_TIME_ZONE } from '@/lib/utils/calendar';
+import { todayInVenezuela, VENEZUELA_TIME_ZONE } from '@/lib/utils/calendar';
 import { apiFetch } from '@/lib/http/client';
 import type { Invoice } from '@/lib/types';
 
 export function InvoicesPage() {
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => todayInVenezuela());
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const { data: invoices = [], refetch } = useInvoices(date);
   const { data: summary } = useInvoiceSummary(date);
