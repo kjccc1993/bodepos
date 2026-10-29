@@ -29,9 +29,7 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
     const el = scrollRef.current;
     if (dragRef.current.pointerId !== pointerId) return;
 
-    if (dragRef.current.moved) {
-      suppressChipClickRef.current = true;
-    }
+    const didMove = dragRef.current.moved;
 
     dragRef.current.pointerId = -1;
     dragRef.current.moved = false;
@@ -39,6 +37,14 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
 
     if (el?.hasPointerCapture(pointerId)) {
       el.releasePointerCapture(pointerId);
+    }
+
+    if (didMove) {
+      suppressChipClickRef.current = true;
+      // El click, si llega, se despacha justo después de pointerup.
+      window.setTimeout(() => {
+        suppressChipClickRef.current = false;
+      }, 0);
     }
   }, []);
 
@@ -49,14 +55,14 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
       const el = scrollRef.current;
       if (!el) return;
 
+      // No capturar el puntero todavía: setPointerCapture en pointerdown
+      // redirige el click al contenedor y el chip nunca recibe onClick.
       dragRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,
         startScrollLeft: el.scrollLeft,
         moved: false,
       };
-      el.setPointerCapture(e.pointerId);
-      setIsGrabbing(true);
     },
     [dragScrollEnabled],
   );
@@ -68,7 +74,16 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
     const dx = e.clientX - dragRef.current.startX;
     if (!dragRef.current.moved && Math.abs(dx) <= DRAG_CLICK_THRESHOLD_PX) return;
 
-    dragRef.current.moved = true;
+    if (!dragRef.current.moved) {
+      dragRef.current.moved = true;
+      setIsGrabbing(true);
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // El puntero ya no está activo.
+      }
+    }
+
     el.scrollLeft = dragRef.current.startScrollLeft - dx;
   }, []);
 
@@ -85,6 +100,11 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
     },
     [endDrag],
   );
+
+  const onScrollPointerLeave = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current.pointerId !== e.pointerId || dragRef.current.moved) return;
+    dragRef.current.pointerId = -1;
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -138,6 +158,7 @@ export function ProductCategoryFilter({ categories, value, onChange }: Props) {
       onPointerMove={onScrollPointerMove}
       onPointerUp={onScrollPointerUp}
       onPointerCancel={onScrollPointerCancel}
+      onPointerLeave={onScrollPointerLeave}
     >
       <Flex
         gap={{ base: 1.5, md: 2 }}
