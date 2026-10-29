@@ -24,8 +24,8 @@ export function CompactQuantityField({
   onStep,
   hideLabel = false,
 }: CompactQuantityFieldProps) {
-  const integer = unit === 'UNIT';
-  const decimal = unit !== 'UNIT';
+  const integer = true;
+  const decimal = false;
   const [draft, setDraft] = useState<string | null>(null);
 
   useEffect(() => {

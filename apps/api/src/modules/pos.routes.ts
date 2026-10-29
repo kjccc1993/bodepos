@@ -23,6 +23,7 @@ import {
   serializeStore,
 } from './serialize.js';
 import { productWithCategoryArgs } from './product-include.js';
+import { resolveProductPricing, type ProductPricingInput } from './product-pricing.js';
 
 export const posRouter = Router();
 posRouter.use(authRequired);
@@ -174,7 +175,53 @@ const productBody = z.object({
   barcode: z.string().nullable().optional(),
   lowStockThreshold: z.number().nullable().optional(),
   categoryId: z.string().uuid().nullable().optional(),
+  priceInputMode: z.enum(['UNIT', 'PACKAGE']).optional(),
+  unitsPerPackage: z.number().nullable().optional(),
+  packagePriceUsd: z.number().nullable().optional(),
+  packageCostUsd: z.number().nullable().optional(),
 });
+
+function pricingFromBody(
+  body: {
+    unit?: ProductUnit;
+    priceUsd?: number;
+    costUsd?: number;
+    priceInputMode?: 'UNIT' | 'PACKAGE';
+    unitsPerPackage?: number | null;
+    packagePriceUsd?: number | null;
+    packageCostUsd?: number | null;
+  },
+  existing?: {
+    unit: ProductUnit;
+    priceUsd: { toNumber(): number } | number;
+    costUsd: { toNumber(): number } | number;
+    priceInputMode: 'UNIT' | 'PACKAGE';
+    unitsPerPackage: number | null;
+    packagePriceUsd: { toNumber(): number } | number | null;
+    packageCostUsd: { toNumber(): number } | number | null;
+  },
+): ProductPricingInput {
+  const money = (value: { toNumber(): number } | number | null | undefined) => {
+    if (value == null) return null;
+    return typeof value === 'number' ? value : value.toNumber();
+  };
+  return {
+    unit: body.unit ?? existing?.unit ?? 'UNIT',
+    priceInputMode: body.priceInputMode ?? existing?.priceInputMode ?? 'UNIT',
+    unitsPerPackage: body.unitsPerPackage !== undefined ? body.unitsPerPackage : (existing?.unitsPerPackage ?? null),
+    packagePriceUsd:
+      body.packagePriceUsd !== undefined ? body.packagePriceUsd : money(existing?.packagePriceUsd),
+    packageCostUsd: body.packageCostUsd !== undefined ? body.packageCostUsd : money(existing?.packageCostUsd),
+    priceUsd: body.priceUsd ?? (existing ? money(existing.priceUsd) ?? undefined : undefined),
+    costUsd: body.costUsd ?? (existing ? money(existing.costUsd) ?? 0 : 0),
+  };
+}
+
+function productPricingOrThrow(input: ProductPricingInput) {
+  const resolved = resolveProductPricing(input);
+  if (!resolved.ok) throw new AppError(422, 'VALIDATION_ERROR', resolved.message);
+  return resolved.value;
+}
 
 posRouter.post(
   '/products',
@@ -183,12 +230,23 @@ posRouter.post(
     const parsed = productBody.safeParse(req.body);
     if (!parsed.success) throw new AppError(422, 'VALIDATION_ERROR', 'Producto inválido');
     const rate = await getStoreRate(storeId);
-    const { categoryId: bodyCategoryId, ...rest } = parsed.data;
+    const {
+      categoryId: bodyCategoryId,
+      priceUsd: _priceUsd,
+      costUsd: _costUsd,
+      priceInputMode: _priceInputMode,
+      unitsPerPackage: _unitsPerPackage,
+      packagePriceUsd: _packagePriceUsd,
+      packageCostUsd: _packageCostUsd,
+      ...rest
+    } = parsed.data;
     const categoryId = await resolveProductCategoryId(storeId, bodyCategoryId);
+    const pricing = productPricingOrThrow(pricingFromBody(parsed.data));
     const product = await prisma.product.create({
       data: {
         storeId,
         ...rest,
+        ...pricing,
         stock: parsed.data.stock ?? 0,
         ...(categoryId !== undefined ? { categoryId } : {}),
       },
@@ -207,9 +265,19 @@ posRouter.patch(
     const rate = await getStoreRate(storeId);
     const existing = await prisma.product.findFirst({ where: { id: req.params.id, storeId } });
     if (!existing) throw new AppError(404, 'PRODUCT_NOT_FOUND', 'Producto no encontrado');
-    const { categoryId: bodyCategoryId, ...patchRest } = parsed.data;
+    const {
+      categoryId: bodyCategoryId,
+      priceUsd: _priceUsd,
+      costUsd: _costUsd,
+      priceInputMode: _priceInputMode,
+      unitsPerPackage: _unitsPerPackage,
+      packagePriceUsd: _packagePriceUsd,
+      packageCostUsd: _packageCostUsd,
+      ...patchRest
+    } = parsed.data;
     const categoryId = await resolveProductCategoryId(storeId, bodyCategoryId);
-    const data = { ...patchRest, ...(categoryId !== undefined ? { categoryId } : {}) };
+    const pricing = productPricingOrThrow(pricingFromBody(parsed.data, existing));
+    const data = { ...patchRest, ...pricing, ...(categoryId !== undefined ? { categoryId } : {}) };
     const product = await prisma.product.update({
       where: { id: existing.id },
       data,

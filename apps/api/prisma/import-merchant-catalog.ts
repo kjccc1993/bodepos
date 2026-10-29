@@ -14,12 +14,11 @@ type MerchantCatalogItem = {
 };
 
 function mapUnit(unit: string): ProductUnit {
-  if (unit === 'Kg') return ProductUnit.GRAM;
+  if (unit === 'Kg') return ProductUnit.KG;
   return ProductUnit.UNIT;
 }
 
-function mapStock(unit: string, inStock: number): number {
-  if (unit === 'Kg') return (inStock ?? 0) * 1000;
+function mapStock(_unit: string, inStock: number): number {
   return inStock ?? 0;
 }
 

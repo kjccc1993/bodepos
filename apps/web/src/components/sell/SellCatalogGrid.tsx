@@ -33,7 +33,6 @@ const SellProductRow = memo(function SellProductRow({
           inCart={inCart}
           onQuantityChange={raw => onQuantityChange(product, raw)}
           onStep={delta => onStep(product, delta)}
-          hideLabel
         />
       }
     />

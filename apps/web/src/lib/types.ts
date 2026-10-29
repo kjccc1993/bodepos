@@ -1,4 +1,6 @@
-export type ProductUnit = 'UNIT' | 'GRAM';
+export type ProductUnit = 'UNIT' | 'KG';
+
+export type PriceInputMode = 'UNIT' | 'PACKAGE';
 
 export type ProductCategory = {
   id: string;
@@ -14,6 +16,11 @@ export type Product = {
   priceBs: number;
   costUsd: number;
   unit: ProductUnit;
+  /** Cómo se capturó el precio. Ausente en cachés viejas: se trata como por unidad. */
+  priceInputMode?: PriceInputMode;
+  unitsPerPackage?: number | null;
+  packagePriceUsd?: number | null;
+  packageCostUsd?: number | null;
   stock: number;
   barcode: string | null;
   isActive: boolean;

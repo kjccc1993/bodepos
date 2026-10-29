@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, Portal, Tooltip } from '@chakra-ui/react';
 import { CompactQuantityField } from '@/components/sell/CompactQuantityField';
 import { ProductCardShell } from '@/components/sell/ProductCardShell';
-import { lineTotalUsd, parseQuantityInput } from '@/lib/cart/quantity';
+import { lineTotalUsd, nextSteppedQuantity, parseQuantityInput } from '@/lib/cart/quantity';
 import { usdToBs } from '@/lib/money';
 import type { CartLine, Product } from '@/lib/types';
 
@@ -80,15 +80,13 @@ export function CartLineCard({ line, rate, stock, onRemove, onUpdateQty }: Props
           unit={line.unit}
           quantity={line.quantity}
           inCart
-          hideLabel
           onQuantityChange={raw => {
             const q = parseQuantityInput(raw, line.unit);
             if (q <= 0) onRemove();
             else onUpdateQty(q);
           }}
           onStep={delta => {
-            const step = line.unit === 'UNIT' ? delta : delta * 100;
-            const next = Math.max(0, line.quantity + step);
+            const next = nextSteppedQuantity(line.quantity, line.unit, delta);
             if (next <= 0) onRemove();
             else onUpdateQty(next);
           }}

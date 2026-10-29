@@ -15,7 +15,11 @@ export async function cacheCatalog(products: Product[], customers: Customer[]) {
 }
 
 export async function getCachedProducts(): Promise<Product[]> {
-  return offlineDb.products.orderBy('name').toArray();
+  const rows = await offlineDb.products.orderBy('name').toArray();
+  return rows.map(product => {
+    if ((product.unit as string) !== 'GRAM') return product;
+    return { ...product, unit: 'KG', stock: product.stock / 1000 };
+  });
 }
 
 export async function queueOutbox(kind: OutboxOp['kind'], payload: unknown) {

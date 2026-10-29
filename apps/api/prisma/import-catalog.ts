@@ -13,13 +13,12 @@ type LegacyCatalogItem = {
 };
 
 function mapLegacyUnit(unit: string): ProductUnit {
-  if (unit === 'Kg') return ProductUnit.GRAM;
+  if (unit === 'Kg') return ProductUnit.KG;
   return ProductUnit.UNIT;
 }
 
-/** Stock interno: unidades o gramos (precio USD sigue siendo por kg en GRAM). */
-function mapLegacyStock(unit: string, inStock: number): number {
-  if (unit === 'Kg') return inStock * 1000;
+/** Stock interno: unidades o kilogramos. El precio USD de Kg es por kg. */
+function mapLegacyStock(_unit: string, inStock: number): number {
   return inStock;
 }
 

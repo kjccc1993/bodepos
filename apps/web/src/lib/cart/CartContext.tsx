@@ -8,11 +8,25 @@ type Carts = Record<CartSlot, CartLine[]>;
 
 const empty: Carts = { 1: [], 2: [], 3: [] };
 
+const CART_GRAMS_FLAG = 'bodepos_cart_input_grams';
+
 function loadCarts(): Carts {
   try {
     const raw = localStorage.getItem('bodepos_carts');
-    if (!raw) return { ...empty };
-    return { ...empty, ...JSON.parse(raw) };
+    const parsed = { ...empty, ...(raw ? JSON.parse(raw) : {}) } as Carts;
+    if (localStorage.getItem(CART_GRAMS_FLAG) === '1') return parsed;
+
+    for (const slot of SLOTS) {
+      parsed[slot] = (parsed[slot] ?? []).map(line => {
+        const legacyUnit = line.unit as string;
+        if (legacyUnit === 'GRAM') return { ...line, unit: 'KG' };
+        if (legacyUnit === 'KG') return { ...line, quantity: Math.round(line.quantity * 1000) };
+        return line;
+      });
+    }
+    localStorage.setItem('bodepos_carts', JSON.stringify(parsed));
+    localStorage.setItem(CART_GRAMS_FLAG, '1');
+    return parsed;
   } catch {
     return { ...empty };
   }
@@ -28,7 +42,7 @@ type CartContextValue = {
   updateQty: (productId: string, quantity: number) => void;
   removeLine: (productId: string) => void;
   clearCart: () => void;
-  /** Cantidad de productos distintos en el carrito activo (no suma unidades/gramos). */
+  /** Cantidad de productos distintos en el carrito activo (no suma unidades ni kg). */
   itemCount: number;
 };
 

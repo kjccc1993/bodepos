@@ -44,7 +44,7 @@ SELECT id, 'Refresco 2 litros coca cola', 1.78, 'UNIT', 0, NULL, true, NOW(), NO
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Raquty', 0.62, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Queso duro llanero', 8.16, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Queso duro llanero', 8.16, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Polar light', 0.78, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
@@ -54,11 +54,11 @@ SELECT id, 'Pañal hugme xg', 2.81, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bod
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Pañal hugme gde', 3, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Patas de pollo', 2.61, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Patas de pollo', 2.61, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Pasta medio kilo', 1.39, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Para de pollo', 2.61, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Para de pollo', 2.61, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Papel caricias', 0.99, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
@@ -82,13 +82,13 @@ SELECT id, 'Nucita crunch', 2.05, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodep
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Nevada pequeña saborizada', 0.83, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Muslo', 3.3, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Muslo', 3.3, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Mortadela corral pimenton', 4.42, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Mortadela corral pimenton', 4.42, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Mortadela corral mormal', 4.42, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Mortadela corral mormal', 4.42, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Mortadela ahumada', 8.52, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Mortadela ahumada', 8.52, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Mini piruetas', 2.88, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
@@ -116,9 +116,9 @@ SELECT id, 'Justy mini bomba', 0.44, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bo
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Justy', 1.11, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Jamón de pierna prado', 9.38, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Jamón de pierna prado', 9.38, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Jamón de pierna economico', 6.52, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Jamón de pierna economico', 6.52, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Jabón Alive dekilo', 3.04, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
@@ -194,7 +194,7 @@ SELECT id, 'Aros de cebolla peq', 0.34, 'UNIT', 0, NULL, true, NOW(), NOW() FROM
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Aros de cebolla gde', 0.73, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
-SELECT id, 'Alas de pollo', 4.38, 'GRAM', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
+SELECT id, 'Alas de pollo', 4.38, 'KG', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)
 SELECT id, 'Agua litro y medio eleal', 0.61, 'UNIT', 0, NULL, true, NOW(), NOW() FROM bodepos.stores;
 INSERT INTO bodepos.products (store_id, name, price_usd, unit, stock, barcode, is_active, created_at, updated_at)

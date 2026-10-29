@@ -1,9 +1,9 @@
 import type { InvoiceLine, ProductUnit } from '@/lib/types';
 
 export function formatInvoiceLineQuantity(quantity: number, unit: ProductUnit): string {
-  if (unit === 'GRAM') {
-    const n = Number.isInteger(quantity) ? quantity : Math.round(quantity * 10) / 10;
-    return `${n}g`;
+  if (unit === 'KG') {
+    const grams = Math.round(quantity * 1000);
+    return `${grams} g`;
   }
   return Number.isInteger(quantity) ? String(quantity) : String(Math.round(quantity * 100) / 100);
 }

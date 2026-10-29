@@ -2,11 +2,12 @@ import { Badge, Box, Flex, Stack, type StackProps } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { GenericText } from '@/components/ui';
 import { cartHighlightProps, softCardProps } from '@/lib/design/surface-styles';
+import { formatStockAmount } from '@/lib/cart/quantity';
 import { formatBs, formatUsd } from '@/lib/money';
 import type { Product } from '@/lib/types';
 
 export function productStockSuffix(unit: Product['unit']) {
-  return unit === 'UNIT' ? 'uds' : 'g';
+  return unit === 'UNIT' ? 'uds' : 'kg';
 }
 
 /** Ancho de la columna de acciones (stepper o botones), alineado con CompactQuantityField. */
@@ -74,7 +75,7 @@ export function ProductCardShell({
             flexShrink={0}
             alignSelf="flex-start"
           >
-            {product.stock} {stockSuffix}
+            {formatStockAmount(product.stock, product.unit)} {stockSuffix}
           </Badge>
         )}
       </Flex>

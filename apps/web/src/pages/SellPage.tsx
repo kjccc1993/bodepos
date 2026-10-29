@@ -9,7 +9,7 @@ import { GenericText } from '@/components/ui';
 import { sellWorkspacePanelProps } from '@/lib/design/surface-styles';
 import { useProductCategories, useProductStockMap, useStoreSettings } from '@/lib/api/hooks';
 import { useBarcodeScanner } from '@/lib/barcode/useBarcodeScanner';
-import { parseQuantityInput } from '@/lib/cart/quantity';
+import { nextSteppedQuantity, parseQuantityInput } from '@/lib/cart/quantity';
 import { useCart } from '@/lib/cart/CartContext';
 import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
 import { apiFetch } from '@/lib/http/client';
@@ -59,8 +59,7 @@ export function SellPage() {
   const onStep = useCallback(
     (p: Product, delta: number) => {
       const current = qtyByProductId.get(p.id) ?? 0;
-      const step = p.unit === 'UNIT' ? delta : delta * 100;
-      const next = Math.max(0, current + step);
+      const next = nextSteppedQuantity(current, p.unit, delta);
       syncQuantity(p, next > 0 ? String(next) : '');
     },
     [qtyByProductId, syncQuantity],
@@ -79,8 +78,7 @@ export function SellPage() {
           }
         }
         const current = qtyByProductId.get(p.id) ?? 0;
-        const step = p.unit === 'UNIT' ? 1 : 100;
-        syncQuantity(p, String(current + step));
+        syncQuantity(p, String(nextSteppedQuantity(current, p.unit, 1)));
       })();
     },
     [products, qtyByProductId, syncQuantity],

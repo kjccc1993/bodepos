@@ -18,11 +18,17 @@ import { useInfiniteProductList } from '@/lib/hooks/useInfiniteProductList';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   formatBs,
+  formatUsd,
   priceUsdFromProfitMarkupPercent,
   profitMarkupPercent,
   roundUsd,
   usdToBs,
 } from '@/lib/money';
+import {
+  deriveUnitAmountsFromPackage,
+  resolveProductPricing,
+  type PriceInputMode,
+} from '@/lib/product-pricing';
 import { effectiveRate } from '@/lib/rate';
 import type { Product, ProductUnit } from '@/lib/types';
 import { apiFetch } from '@/lib/http/client';
@@ -30,8 +36,32 @@ import { headerCreateButtonProps } from '@/lib/design/surface-styles';
 
 const UNIT_OPTIONS: SelectOption[] = [
   { value: 'UNIT', label: 'Unidad' },
-  { value: 'GRAM', label: 'Gramos' },
+  { value: 'KG', label: 'Kilogramos' },
 ];
+
+const PRICE_MODE_OPTIONS: SelectOption[] = [
+  { value: 'UNIT', label: 'Por unidad' },
+  { value: 'PACKAGE', label: 'Por paquete' },
+];
+
+function withPackageCapture(
+  form: Partial<Product>,
+  packageCostUsd: number,
+  packagePriceUsd: number,
+  unitsPerPackage: number | null,
+): Partial<Product> {
+  const derived = deriveUnitAmountsFromPackage(packageCostUsd, packagePriceUsd, unitsPerPackage);
+  const canDerive =
+    unitsPerPackage != null && Number.isInteger(unitsPerPackage) && unitsPerPackage >= 1 && packagePriceUsd > 0;
+  return {
+    ...form,
+    priceInputMode: 'PACKAGE',
+    unitsPerPackage,
+    packageCostUsd,
+    packagePriceUsd,
+    ...(canDerive ? derived : {}),
+  };
+}
 
 export function ProductsPage() {
   const { data: settings } = useStoreSettings();
@@ -41,6 +71,7 @@ export function ProductsPage() {
   const { data: categories = [] } = useProductCategories();
   const [scrollRoot, setScrollRoot] = useState<HTMLElement | null>(null);
   const [form, setForm] = useState<Partial<Product> | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [lockedProfitPct, setLockedProfitPct] = useState<number | null>(null);
   const priceDriverRef = useRef<'profit' | 'price' | null>(null);
   const [inventoryProduct, setInventoryProduct] = useState<Product | null>(null);
@@ -50,6 +81,7 @@ export function ProductsPage() {
   const openProductForm = useCallback((p: Partial<Product>) => {
     priceDriverRef.current = null;
     setLockedProfitPct(null);
+    setFormError(null);
     setForm(p);
   }, []);
 
@@ -57,13 +89,30 @@ export function ProductsPage() {
   const onInventory = useCallback((p: Product) => setInventoryProduct(p), []);
   const save = useSaveProduct();
   const qc = useQueryClient();
-  const formCostUsd = Number(form?.costUsd ?? 0);
-  const formPriceUsd = Number(form?.priceUsd ?? 0);
-  const derivedProfitPct = form ? profitMarkupPercent(formCostUsd, formPriceUsd) : null;
+  const unitValue = form?.unit ?? 'UNIT';
+  const sellsByUnit = unitValue === 'UNIT';
+  const packageMode = sellsByUnit && form?.priceInputMode === 'PACKAGE';
+  const editedCostUsd = packageMode ? Number(form?.packageCostUsd ?? 0) : Number(form?.costUsd ?? 0);
+  const editedPriceUsd = packageMode ? Number(form?.packagePriceUsd ?? 0) : Number(form?.priceUsd ?? 0);
+  const packageUnits = form?.unitsPerPackage ?? null;
+  const derivedUnit = deriveUnitAmountsFromPackage(
+    roundUsd(Number(form?.packageCostUsd ?? 0)),
+    roundUsd(Number(form?.packagePriceUsd ?? 0)),
+    packageUnits,
+  );
+  const showDerivedUnit =
+    packageMode && packageUnits != null && Number.isInteger(packageUnits) && packageUnits >= 1 && editedPriceUsd > 0;
+  const derivedProfitPct = form ? profitMarkupPercent(editedCostUsd, editedPriceUsd) : null;
   const formProfitPct =
     priceDriverRef.current === 'profit' && lockedProfitPct != null ? lockedProfitPct : derivedProfitPct;
+  const costLabel = !sellsByUnit ? 'Costo USD / kg' : packageMode ? 'Costo del paquete' : 'Costo unitario';
+  const priceLabel = !sellsByUnit ? 'Precio venta USD / kg' : packageMode ? 'Precio del paquete' : 'Precio unitario';
+  const priceBsLabel = packageMode
+    ? 'Precio del paquete Bs'
+    : sellsByUnit
+      ? 'Precio venta Bs'
+      : 'Precio venta Bs / kg';
 
-  const unitValue = form?.unit ?? 'UNIT';
   const fieldIds = {
     name: useId(),
     price: useId(),
@@ -73,6 +122,11 @@ export function ProductsPage() {
     barcode: useId(),
     unit: useId(),
     category: useId(),
+    priceMode: useId(),
+    units: useId(),
+    unitCost: useId(),
+    unitPrice: useId(),
+    unitPriceBs: useId(),
   };
 
   const defaultCategoryId = categories.find(c => c.name === 'Despensa')?.id ?? categories[0]?.id ?? null;
@@ -90,6 +144,10 @@ export function ProductsPage() {
                 priceUsd: 1,
                 costUsd: 0,
                 unit: 'UNIT',
+                priceInputMode: 'UNIT',
+                unitsPerPackage: null,
+                packageCostUsd: null,
+                packagePriceUsd: null,
                 categoryId: defaultCategoryId,
               })
             }
@@ -194,7 +252,7 @@ export function ProductsPage() {
           p={4}
           zIndex={20}
         >
-          <Box bg="white" p={4} borderRadius="md" w="full" maxW="md">
+          <Box bg="white" p={4} borderRadius="md" w="full" maxW="md" maxH="100%" overflowY="auto">
             <Stack gap={3}>
               <GenericHeading variant="section">
                 {form.id ? 'Editar' : 'Nuevo'} producto
@@ -219,28 +277,123 @@ export function ProductsPage() {
                 <GenericSelect
                   options={UNIT_OPTIONS}
                   value={unitValue}
-                  onChange={v => setForm({ ...form, unit: v as ProductUnit })}
+                  onChange={v => {
+                    const unit = v as ProductUnit;
+                    setFormError(null);
+                    if (unit !== 'UNIT') {
+                      priceDriverRef.current = null;
+                      setLockedProfitPct(null);
+                      setForm({
+                        ...form,
+                        unit,
+                        priceInputMode: 'UNIT',
+                        unitsPerPackage: null,
+                        packageCostUsd: null,
+                        packagePriceUsd: null,
+                      });
+                      return;
+                    }
+                    setForm({ ...form, unit });
+                  }}
                   name={fieldIds.unit}
                   aria-label="Unidad de venta"
                 />
               </FormField>
+              {sellsByUnit && (
+                <FormField label="Captura de precio" htmlFor={fieldIds.priceMode}>
+                  <GenericSelect
+                    options={PRICE_MODE_OPTIONS}
+                    value={packageMode ? 'PACKAGE' : 'UNIT'}
+                    onChange={v => {
+                      const mode = v as PriceInputMode;
+                      priceDriverRef.current = null;
+                      setLockedProfitPct(null);
+                      setFormError(null);
+                      if (mode === 'PACKAGE') {
+                        setForm(
+                          withPackageCapture(
+                            form,
+                            roundUsd(Number(form.packageCostUsd ?? 0)),
+                            roundUsd(Number(form.packagePriceUsd ?? 0)),
+                            form.unitsPerPackage ?? null,
+                          ),
+                        );
+                        return;
+                      }
+                      setForm({
+                        ...form,
+                        priceInputMode: 'UNIT',
+                        unitsPerPackage: null,
+                        packageCostUsd: null,
+                        packagePriceUsd: null,
+                      });
+                    }}
+                    name={fieldIds.priceMode}
+                    aria-label="Captura de precio"
+                  />
+                </FormField>
+              )}
+              {packageMode && (
+                <FormField label="Unidades por paquete" htmlFor={fieldIds.units}>
+                  <GenericInput
+                    id={fieldIds.units}
+                    integer
+                    inputMode="numeric"
+                    placeholder="Ej. 24"
+                    value={form.unitsPerPackage ?? ''}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      const unitsPerPackage = raw === '' ? null : Number(raw);
+                      setFormError(null);
+                      setForm(
+                        withPackageCapture(
+                          form,
+                          roundUsd(Number(form.packageCostUsd ?? 0)),
+                          roundUsd(Number(form.packagePriceUsd ?? 0)),
+                          unitsPerPackage,
+                        ),
+                      );
+                    }}
+                  />
+                </FormField>
+              )}
               <Flex direction={{ base: 'column', md: 'row' }} gap={2} w="full">
                 <Box flex={1} minW={0}>
-                  <FormField label="Costo" htmlFor={fieldIds.cost}>
+                  <FormField label={costLabel} htmlFor={fieldIds.cost}>
                     <MoneyAmountInput
                       id={fieldIds.cost}
-                      value={Number(form.costUsd ?? 0)}
+                      value={editedCostUsd}
                       onChange={costUsd => {
                         const cost = roundUsd(costUsd);
+                        setFormError(null);
+                        if (packageMode) {
+                          const packagePriceUsd =
+                            priceDriverRef.current === 'profit' && lockedProfitPct != null && cost > 0
+                              ? priceUsdFromProfitMarkupPercent(cost, lockedProfitPct)
+                              : roundUsd(Number(form.packagePriceUsd ?? 0));
+                          setForm(withPackageCapture(form, cost, packagePriceUsd, form.unitsPerPackage ?? null));
+                          return;
+                        }
                         if (priceDriverRef.current === 'profit' && lockedProfitPct != null && cost > 0) {
                           setForm({
                             ...form,
+                            priceInputMode: 'UNIT',
                             costUsd: cost,
                             priceUsd: priceUsdFromProfitMarkupPercent(cost, lockedProfitPct),
+                            unitsPerPackage: null,
+                            packageCostUsd: null,
+                            packagePriceUsd: null,
                           });
                           return;
                         }
-                        setForm({ ...form, costUsd: cost });
+                        setForm({
+                          ...form,
+                          priceInputMode: sellsByUnit ? 'UNIT' : form.priceInputMode,
+                          costUsd: cost,
+                          unitsPerPackage: null,
+                          packageCostUsd: null,
+                          packagePriceUsd: null,
+                        });
                       }}
                     />
                   </FormField>
@@ -253,44 +406,66 @@ export function ProductsPage() {
                       onChange={profitPct => {
                         priceDriverRef.current = 'profit';
                         setLockedProfitPct(roundUsd(profitPct));
-                        const cost = roundUsd(Number(form.costUsd ?? 0));
-                        if (cost > 0) {
-                          setForm({
-                            ...form,
-                            priceUsd: priceUsdFromProfitMarkupPercent(cost, profitPct),
-                          });
+                        setFormError(null);
+                        const cost = roundUsd(editedCostUsd);
+                        if (cost <= 0) return;
+                        const price = priceUsdFromProfitMarkupPercent(cost, profitPct);
+                        if (packageMode) {
+                          setForm(withPackageCapture(form, cost, price, form.unitsPerPackage ?? null));
+                          return;
                         }
+                        setForm({ ...form, priceUsd: price });
                       }}
                     />
                   </FormField>
                 </Box>
               </Flex>
-              {formCostUsd <= 0 && (
+              {editedCostUsd <= 0 && (
                 <GenericText variant="muted" fontSize="sm" px={0.5}>
                   Indica un costo mayor a 0 para calcular la ganancia.
                 </GenericText>
               )}
               <Flex direction={{ base: 'column', md: 'row' }} gap={2} w="full">
                 <Box flex={1} minW={0}>
-                  <FormField label="Precio venta USD" htmlFor={fieldIds.price}>
+                  <FormField label={priceLabel} htmlFor={fieldIds.price}>
                     <MoneyAmountInput
                       id={fieldIds.price}
-                      value={formPriceUsd}
+                      value={editedPriceUsd}
                       onChange={priceUsd => {
                         priceDriverRef.current = 'price';
                         setLockedProfitPct(null);
-                        setForm({ ...form, priceUsd: roundUsd(priceUsd) });
+                        setFormError(null);
+                        const price = roundUsd(priceUsd);
+                        if (packageMode) {
+                          setForm(
+                            withPackageCapture(
+                              form,
+                              roundUsd(Number(form.packageCostUsd ?? 0)),
+                              price,
+                              form.unitsPerPackage ?? null,
+                            ),
+                          );
+                          return;
+                        }
+                        setForm({
+                          ...form,
+                          priceInputMode: sellsByUnit ? 'UNIT' : form.priceInputMode,
+                          priceUsd: price,
+                          unitsPerPackage: null,
+                          packageCostUsd: null,
+                          packagePriceUsd: null,
+                        });
                       }}
                     />
                   </FormField>
                 </Box>
                 <Box flex={1} minW={0}>
-                  <FormField label="Precio venta Bs" htmlFor={fieldIds.priceBs}>
+                  <FormField label={priceBsLabel} htmlFor={fieldIds.priceBs}>
                     <GenericInput
                       id={fieldIds.priceBs}
                       readOnly
                       disabled
-                      value={formatBs(usdToBs(formPriceUsd, rate))}
+                      value={formatBs(usdToBs(editedPriceUsd, rate))}
                       bg="gray.50"
                     />
                   </FormField>
@@ -301,6 +476,46 @@ export function ProductsPage() {
                   El precio de venta es menor que el costo.
                 </GenericText>
               )}
+              {packageMode && (
+                <Stack gap={2}>
+                  <GenericText variant="muted" fontSize="sm" px={0.5}>
+                    Precio unitario = precio del paquete / unidades. La venta sigue siendo por unidad.
+                  </GenericText>
+                  <Flex direction={{ base: 'column', md: 'row' }} gap={2} w="full">
+                    <Box flex={1} minW={0}>
+                      <FormField label="Costo unitario" htmlFor={fieldIds.unitCost}>
+                        <GenericInput
+                          id={fieldIds.unitCost}
+                          readOnly
+                          disabled
+                          value={showDerivedUnit ? formatUsd(derivedUnit.costUsd) : '—'}
+                          bg="gray.50"
+                        />
+                      </FormField>
+                    </Box>
+                    <Box flex={1} minW={0}>
+                      <FormField label="Precio unitario" htmlFor={fieldIds.unitPrice}>
+                        <GenericInput
+                          id={fieldIds.unitPrice}
+                          readOnly
+                          disabled
+                          value={showDerivedUnit ? formatUsd(derivedUnit.priceUsd) : '—'}
+                          bg="gray.50"
+                        />
+                      </FormField>
+                    </Box>
+                  </Flex>
+                  <FormField label="Precio unitario Bs" htmlFor={fieldIds.unitPriceBs}>
+                    <GenericInput
+                      id={fieldIds.unitPriceBs}
+                      readOnly
+                      disabled
+                      value={showDerivedUnit ? formatBs(usdToBs(derivedUnit.priceUsd, rate)) : '—'}
+                      bg="gray.50"
+                    />
+                  </FormField>
+                </Stack>
+              )}
               <FormField label="Código de barras" htmlFor={fieldIds.barcode}>
                 <GenericInput
                   id={fieldIds.barcode}
@@ -308,6 +523,11 @@ export function ProductsPage() {
                   onChange={e => setForm({ ...form, barcode: e.target.value })}
                 />
               </FormField>
+              {formError && (
+                <GenericText variant="error" fontSize="sm" px={0.5}>
+                  {formError}
+                </GenericText>
+              )}
               <Flex gap={2}>
                 <Button
                   flex={1}
@@ -315,6 +535,7 @@ export function ProductsPage() {
                   onClick={() => {
                     priceDriverRef.current = null;
                     setLockedProfitPct(null);
+                    setFormError(null);
                     setForm(null);
                   }}
                 >
@@ -323,19 +544,38 @@ export function ProductsPage() {
                 <Button
                   flex={1}
                   colorPalette="green"
+                  loading={save.isPending}
                   onClick={async () => {
-                    await save.mutateAsync({
-                      id: form.id,
-                      name: form.name!,
+                    const unit = (form.unit ?? 'UNIT') as ProductUnit;
+                    const resolved = resolveProductPricing({
+                      unit,
+                      priceInputMode: unit === 'UNIT' ? (form.priceInputMode ?? 'UNIT') : 'UNIT',
+                      unitsPerPackage: unit === 'UNIT' ? (form.unitsPerPackage ?? null) : null,
+                      packagePriceUsd: unit === 'UNIT' ? (form.packagePriceUsd ?? null) : null,
+                      packageCostUsd: unit === 'UNIT' ? (form.packageCostUsd ?? null) : null,
                       priceUsd: Number(form.priceUsd),
                       costUsd: Number(form.costUsd ?? 0),
-                      unit: (form.unit ?? 'UNIT') as ProductUnit,
-                      barcode: form.barcode ?? null,
-                      categoryId: form.categoryId ?? null,
                     });
-                    priceDriverRef.current = null;
-                    setLockedProfitPct(null);
-                    setForm(null);
+                    if (!resolved.ok) {
+                      setFormError(resolved.message);
+                      return;
+                    }
+                    try {
+                      await save.mutateAsync({
+                        id: form.id,
+                        name: form.name ?? '',
+                        unit,
+                        barcode: form.barcode ?? null,
+                        categoryId: form.categoryId ?? null,
+                        ...resolved.value,
+                      });
+                      priceDriverRef.current = null;
+                      setLockedProfitPct(null);
+                      setFormError(null);
+                      setForm(null);
+                    } catch (e) {
+                      setFormError(e instanceof Error ? e.message : 'No se pudo guardar el producto.');
+                    }
                   }}
                 >
                   Guardar

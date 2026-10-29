@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button, CloseButton, Dialog, Flex, Portal, Stack, chakra } from '@chakra-ui/react';
 import { useEffect, useId, useState } from 'react';
 import { FormField, GenericInput, GenericText } from '@/components/ui';
-import { parseQuantityInput } from '@/lib/cart/quantity';
+import { parseStockQuantity } from '@/lib/cart/quantity';
 import type { Product, ProductUnit } from '@/lib/types';
 
 type Direction = 'in' | 'out';
@@ -85,7 +85,7 @@ function InventoryDirectionToggle({
 function amountPlaceholder(unit: ProductUnit, direction: Direction) {
   const verb = direction === 'in' ? 'ingresar' : 'retirar';
   if (unit === 'UNIT') return `Unidades a ${verb}`;
-  return `Gramos a ${verb}`;
+  return `Kg a ${verb}`;
 }
 
 type Props = {
@@ -122,7 +122,7 @@ export function InventoryAdjustDialog({
 
   const submit = async () => {
     setError('');
-    const qty = parseQuantityInput(amount, product.unit);
+    const qty = parseStockQuantity(amount, product.unit);
     if (qty <= 0) {
       setError('Ingresa una cantidad válida mayor a cero.');
       return;

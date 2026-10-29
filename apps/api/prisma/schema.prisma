@@ -64,7 +64,15 @@ model User {
 
 enum ProductUnit {
   UNIT
-  GRAM
+  KG
+
+  @@schema("bodepos")
+}
+
+/// Cómo se capturó el precio de un producto vendido por unidad. Ventas e inventario usan priceUsd/costUsd.
+enum PriceInputMode {
+  UNIT
+  PACKAGE
 
   @@schema("bodepos")
 }
@@ -91,9 +99,13 @@ model Product {
   storeId            String      @map("store_id") @db.Uuid
   categoryId         String?     @map("category_id") @db.Uuid
   name               String      @db.Text
-  priceUsd           Decimal     @map("price_usd") @db.Decimal(18, 4)
-  costUsd            Decimal     @default(0) @map("cost_usd") @db.Decimal(18, 4)
-  unit               ProductUnit @default(UNIT)
+  priceUsd           Decimal        @map("price_usd") @db.Decimal(18, 4)
+  costUsd            Decimal        @default(0) @map("cost_usd") @db.Decimal(18, 4)
+  unit               ProductUnit    @default(UNIT)
+  priceInputMode     PriceInputMode @default(UNIT) @map("price_input_mode")
+  unitsPerPackage    Int?           @map("units_per_package")
+  packagePriceUsd    Decimal?       @map("package_price_usd") @db.Decimal(18, 4)
+  packageCostUsd     Decimal?       @map("package_cost_usd") @db.Decimal(18, 4)
   stock              Decimal     @default(0) @db.Decimal(18, 4)
   barcode            String?     @db.Text
   lowStockThreshold  Decimal?    @map("low_stock_threshold") @db.Decimal(18, 4)

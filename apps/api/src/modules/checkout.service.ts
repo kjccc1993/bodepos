@@ -14,9 +14,9 @@ export type CheckoutPayments = {
 };
 export type CheckoutChange = { bs?: number; usd?: number; mobileBs?: number };
 
-/** Precio catálogo en USD por kg (GRAM, cantidad en g) o por unidad (UNIT). */
-function billableQuantity(quantity: number, unit: ProductUnit): number {
-  if (unit === ProductUnit.GRAM) return quantity / 1000;
+/** Venta por peso: la cantidad llega en gramos y el stock/precio están en kg. */
+function stockQuantity(quantity: number, unit: ProductUnit): number {
+  if (unit === ProductUnit.KG) return Math.round((quantity / 1000) * 10000) / 10000;
   return quantity;
 }
 
@@ -63,12 +63,13 @@ export async function executeCheckout(input: CheckoutInput) {
     if (!product) throw new AppError(404, 'PRODUCT_NOT_FOUND', `Producto no encontrado: ${line.productId}`);
     if (line.quantity <= 0) throw new AppError(422, 'INVALID_QTY', 'Cantidad inválida');
     const unitPrice = toNumber(product.priceUsd);
-    const lineTotal = roundUsd(unitPrice * billableQuantity(line.quantity, product.unit));
+    const quantity = stockQuantity(line.quantity, product.unit);
+    const lineTotal = roundUsd(unitPrice * quantity);
     linesTotalUsd = roundUsd(linesTotalUsd + lineTotal);
     lineData.push({
       product: { connect: { id: product.id } },
       productName: product.name,
-      quantity: line.quantity,
+      quantity,
       unit: product.unit,
       unitPriceUsd: unitPrice,
       lineTotalUsd: lineTotal,
@@ -143,16 +144,17 @@ export async function executeCheckout(input: CheckoutInput) {
 
     for (const line of input.lines) {
       const product = productMap.get(line.productId)!;
+      const quantity = stockQuantity(line.quantity, product.unit);
       await tx.product.update({
         where: { id: product.id },
-        data: { stock: { decrement: line.quantity } },
+        data: { stock: { decrement: quantity } },
       });
       await tx.inventoryMovement.create({
         data: {
           storeId: input.storeId,
           productId: product.id,
           type: 'SALE',
-          qtyDelta: -line.quantity,
+          qtyDelta: -quantity,
           note: `Factura ${invoiceNumber.toString()}`,
         },
       });
